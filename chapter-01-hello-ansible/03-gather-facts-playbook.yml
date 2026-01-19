@@ -1,0 +1,19 @@
+---
+# Gather Facts Playbook - Collect and display system information
+
+- name: Gather and Display System Facts
+  hosts: all
+  gather_facts: true
+
+  tasks:
+    - name: Display OS Distribution
+      ansible.builtin.debug:
+        msg: "OS: {{ ansible_distribution }} {{ ansible_distribution_version }}"
+
+    - name: Display IP Address
+      ansible.builtin.debug:
+        msg: "IP Address: {{ ansible_default_ipv4.address }}"
+
+    - name: Display Memory Information
+      ansible.builtin.debug:
+        msg: "Total Memory: {{ ansible_memtotal_mb }} MB"

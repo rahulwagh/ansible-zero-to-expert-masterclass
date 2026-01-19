@@ -1,0 +1,29 @@
+---
+# Dynamic Host Playbook - Pass server IP from command line
+# Usage: ansible-playbook 04-dynamic-host-playbook.yml -e "target_host=34.2.48.253"
+
+- name: Run tasks on dynamically specified host
+  hosts: "{{ target_host }}"
+  gather_facts: true
+
+  vars:
+    ansible_user: ansible
+    ansible_ssh_private_key_file: /Users/rahulwagh/Downloads/ansible-demo/ansible-course-ssh-key
+    ansible_python_interpreter: /usr/bin/python3
+
+  tasks:
+    - name: Print the target host
+      ansible.builtin.debug:
+        msg: "Running on host: {{ target_host }}"
+
+    - name: Display hostname
+      ansible.builtin.command: hostname
+      register: hostname_output
+
+    - name: Show hostname result
+      ansible.builtin.debug:
+        msg: "Hostname is: {{ hostname_output.stdout }}"
+
+    - name: Display OS information
+      ansible.builtin.debug:
+        msg: "OS: {{ ansible_distribution }} {{ ansible_distribution_version }}"

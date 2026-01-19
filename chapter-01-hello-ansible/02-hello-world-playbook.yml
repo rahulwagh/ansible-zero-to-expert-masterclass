@@ -1,0 +1,15 @@
+---
+# Hello World Playbook - Print a message using debug module
+
+- name: Hello World Example
+  hosts: all
+  gather_facts: false
+
+  tasks:
+    - name: Print Hello World message
+      ansible.builtin.debug:
+        msg: "Hello World from Ansible!"
+
+    - name: Print inventory hostname
+      ansible.builtin.debug:
+        msg: "This task is running on {{ inventory_hostname }}"

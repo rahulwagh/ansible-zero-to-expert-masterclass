@@ -1,0 +1,11 @@
+---
+# Ping Playbook - Verify connectivity to all hosts
+# This is the "Hello World" of Ansible
+
+- name: Ping all hosts
+  hosts: all
+  gather_facts: false
+
+  tasks:
+    - name: Ping the server
+      ansible.builtin.ping:
