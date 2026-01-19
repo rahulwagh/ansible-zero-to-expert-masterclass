@@ -1,0 +1,28 @@
+---
+# ==============================================
+# 09 - Display Group and Host Variables
+# ==============================================
+# Run: ansible-playbook 09-display-group-variables.yml
+
+- name: Display variables from inventory
+  hosts: all
+  gather_facts: false
+
+  tasks:
+    - name: Display environment variable (from group_vars)
+      ansible.builtin.debug:
+        msg: "Environment: {{ environment | default('not defined') }}"
+
+    - name: Display HTTP port (webservers only)
+      ansible.builtin.debug:
+        msg: "HTTP Port: {{ http_port }}"
+      when: "'webservers' in group_names"
+
+    - name: Display DB port (dbservers only)
+      ansible.builtin.debug:
+        msg: "DB Port: {{ db_port }}"
+      when: "'dbservers' in group_names"
+
+    - name: Display all host variables
+      ansible.builtin.debug:
+        var: hostvars[inventory_hostname]

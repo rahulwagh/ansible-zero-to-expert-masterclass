@@ -1,0 +1,24 @@
+---
+# ==============================================
+# 05 - Host Patterns - Exclusion
+# ==============================================
+# Run: ansible-playbook 05-host-patterns-exclusion.yml
+# Exclusion: hosts in one group but NOT in another
+
+- name: Target all hosts EXCEPT dbservers
+  hosts: all:!dbservers
+  gather_facts: false
+
+  tasks:
+    - name: Display hosts not in dbservers
+      ansible.builtin.debug:
+        msg: "{{ inventory_hostname }} is NOT a database server"
+
+- name: Target webservers but NOT loadbalancers
+  hosts: webservers:!loadbalancers
+  gather_facts: false
+
+  tasks:
+    - name: Display webservers that are not loadbalancers
+      ansible.builtin.debug:
+        msg: "{{ inventory_hostname }} is a webserver but NOT a loadbalancer"

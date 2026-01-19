@@ -1,0 +1,24 @@
+---
+# ==============================================
+# 07 - Host Patterns - Regular Expressions
+# ==============================================
+# Run: ansible-playbook 07-host-patterns-regex.yml
+# Use regex patterns (prefix with ~)
+
+- name: Target hosts matching regex pattern
+  hosts: ~ansible-lab-server-[12]
+  gather_facts: false
+
+  tasks:
+    - name: Display hosts matching regex
+      ansible.builtin.debug:
+        msg: "Regex matched: {{ inventory_hostname }}"
+
+- name: Target hosts ending with numbers
+  hosts: ~.*-[0-9]+$
+  gather_facts: false
+
+  tasks:
+    - name: Display hosts ending with numbers
+      ansible.builtin.debug:
+        msg: "Host ending with number: {{ inventory_hostname }}"

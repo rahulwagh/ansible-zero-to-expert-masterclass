@@ -1,0 +1,15 @@
+---
+# ==============================================
+# 04 - Host Patterns - Intersection
+# ==============================================
+# Run: ansible-playbook 04-host-patterns-intersection.yml
+# Intersection: hosts that are in BOTH groups
+
+- name: Target hosts in webservers AND loadbalancers (Intersection)
+  hosts: webservers:&loadbalancers
+  gather_facts: false
+
+  tasks:
+    - name: Display hosts in both groups
+      ansible.builtin.debug:
+        msg: "{{ inventory_hostname }} is in BOTH webservers AND loadbalancers"

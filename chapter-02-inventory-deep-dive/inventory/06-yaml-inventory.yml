@@ -1,0 +1,43 @@
+# ==============================================
+# 06 - Inventory in YAML Format
+# ==============================================
+# Alternative to INI format - more readable for complex structures
+
+all:
+  vars:
+    ansible_user: ansible
+    ansible_ssh_private_key_file: /Users/rahulwagh/Downloads/ansible-demo/ansible-course-ssh-key
+    ansible_python_interpreter: /usr/bin/python3
+
+  children:
+    webservers:
+      hosts:
+        ansible-lab-server-1:
+          ansible_host: <SERVER_1_IP>
+          http_port: 80
+          max_connections: 100
+        ansible-lab-server-2:
+          ansible_host: <SERVER_2_IP>
+          http_port: 8080
+          max_connections: 200
+      vars:
+        nginx_version: "1.24"
+        document_root: /var/www/html
+
+    dbservers:
+      hosts:
+        ansible-lab-server-3:
+          ansible_host: <SERVER_3_IP>
+          db_port: 3306
+          db_name: production_db
+      vars:
+        mysql_version: "8.0"
+        backup_schedule: "0 2 * * *"
+
+    production:
+      children:
+        webservers:
+        dbservers:
+      vars:
+        environment: production
+        monitoring_enabled: true

@@ -1,0 +1,24 @@
+---
+# ==============================================
+# 06 - Host Patterns - Wildcards
+# ==============================================
+# Run: ansible-playbook 06-host-patterns-wildcards.yml
+# Use wildcards to match hostnames
+
+- name: Target hosts matching wildcard pattern
+  hosts: ansible-lab-server-*
+  gather_facts: false
+
+  tasks:
+    - name: Display hosts matching pattern
+      ansible.builtin.debug:
+        msg: "Matched host: {{ inventory_hostname }}"
+
+- name: Target hosts starting with 'ansible'
+  hosts: ansible*
+  gather_facts: false
+
+  tasks:
+    - name: Display ansible hosts
+      ansible.builtin.debug:
+        msg: "Host starting with 'ansible': {{ inventory_hostname }}"

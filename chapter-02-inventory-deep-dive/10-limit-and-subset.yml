@@ -1,0 +1,28 @@
+---
+# ==============================================
+# 10 - Using --limit to Target Subset of Hosts
+# ==============================================
+# This playbook targets all hosts, but you can limit at runtime
+#
+# Run examples:
+#   ansible-playbook 10-limit-and-subset.yml --limit webservers
+#   ansible-playbook 10-limit-and-subset.yml --limit ansible-lab-server-1
+#   ansible-playbook 10-limit-and-subset.yml --limit 'webservers:!loadbalancers'
+#   ansible-playbook 10-limit-and-subset.yml --limit '*.example.com'
+
+- name: Demonstrate --limit option
+  hosts: all
+  gather_facts: false
+
+  tasks:
+    - name: This task runs only on limited hosts
+      ansible.builtin.debug:
+        msg: |
+          Running on: {{ inventory_hostname }}
+          Groups: {{ group_names | join(', ') }}
+
+          TIP: Use --limit to restrict which hosts this runs on
+          Examples:
+            --limit webservers
+            --limit ansible-lab-server-1
+            --limit 'all:!dbservers'

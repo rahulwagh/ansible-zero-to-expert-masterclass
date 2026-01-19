@@ -1,0 +1,38 @@
+---
+# ==============================================
+# 08 - Display Inventory Information
+# ==============================================
+# Run: ansible-playbook 08-display-inventory-info.yml
+# Display various inventory-related variables
+
+- name: Display inventory information
+  hosts: all
+  gather_facts: false
+
+  tasks:
+    - name: Display inventory hostname
+      ansible.builtin.debug:
+        msg: "Inventory Hostname: {{ inventory_hostname }}"
+
+    - name: Display ansible host (IP or hostname)
+      ansible.builtin.debug:
+        msg: "Ansible Host: {{ ansible_host | default(inventory_hostname) }}"
+
+    - name: Display all groups this host belongs to
+      ansible.builtin.debug:
+        msg: "Groups: {{ group_names }}"
+
+    - name: Display all hosts in inventory
+      ansible.builtin.debug:
+        msg: "All hosts: {{ groups['all'] }}"
+      run_once: true
+
+    - name: Display hosts in webservers group
+      ansible.builtin.debug:
+        msg: "Webservers: {{ groups['webservers'] | default([]) }}"
+      run_once: true
+
+    - name: Display hosts in dbservers group
+      ansible.builtin.debug:
+        msg: "DB Servers: {{ groups['dbservers'] | default([]) }}"
+      run_once: true

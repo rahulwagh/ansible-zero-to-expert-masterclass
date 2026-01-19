@@ -1,0 +1,25 @@
+---
+# ==============================================
+# 03 - Target Multiple Groups
+# ==============================================
+# Run: ansible-playbook 03-target-multiple-groups.yml
+
+# Method 1: Using comma-separated groups
+- name: Target webservers AND dbservers (Union)
+  hosts: webservers,dbservers
+  gather_facts: false
+
+  tasks:
+    - name: Display host from webservers or dbservers
+      ansible.builtin.debug:
+        msg: "Host: {{ inventory_hostname }} is in webservers OR dbservers"
+
+# Method 2: Using colon-separated groups (same as comma)
+- name: Target webservers OR loadbalancers
+  hosts: webservers:loadbalancers
+  gather_facts: false
+
+  tasks:
+    - name: Display host info
+      ansible.builtin.debug:
+        msg: "Host: {{ inventory_hostname }} is in webservers OR loadbalancers"

@@ -1,0 +1,17 @@
+---
+# ==============================================
+# 01 - Target All Hosts
+# ==============================================
+# Run: ansible-playbook 01-target-all-hosts.yml
+
+- name: Target all hosts in inventory
+  hosts: all
+  gather_facts: false
+
+  tasks:
+    - name: Ping all hosts
+      ansible.builtin.ping:
+
+    - name: Display hostname
+      ansible.builtin.debug:
+        msg: "Hello from {{ inventory_hostname }}"

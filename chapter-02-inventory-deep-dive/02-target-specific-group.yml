@@ -1,0 +1,23 @@
+---
+# ==============================================
+# 02 - Target Specific Group
+# ==============================================
+# Run: ansible-playbook 02-target-specific-group.yml
+
+- name: Target only webservers group
+  hosts: webservers
+  gather_facts: false
+
+  tasks:
+    - name: Display webserver info
+      ansible.builtin.debug:
+        msg: "Webserver: {{ inventory_hostname }} | HTTP Port: {{ http_port | default('80') }}"
+
+- name: Target only dbservers group
+  hosts: dbservers
+  gather_facts: false
+
+  tasks:
+    - name: Display database server info
+      ansible.builtin.debug:
+        msg: "DB Server: {{ inventory_hostname }} | DB Port: {{ db_port | default('3306') }}"

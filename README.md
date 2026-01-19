@@ -57,7 +57,7 @@ Welcome to the **Ansible Zero to Expert Masterclass**! This comprehensive course
 | # | Chapter | Description | Status |
 |---|---------|-------------|--------|
 | 01 | [Hello Ansible](./chapter-01-hello-ansible/) | Your first playbook, ad-hoc commands, ping, debug | ✅ Ready |
-| 02 | Inventory Deep Dive | Static inventory, groups, host patterns | 📝 Coming Soon |
+| 02 | [Inventory Deep Dive](./chapter-02-inventory-deep-dive/) | Static inventory, groups, host patterns | ✅ Ready |
 | 03 | Variables | vars, vars_files, host_vars, group_vars | 📝 Coming Soon |
 | 04 | Facts & Magic Variables | gather_facts, ansible_facts, set_fact | 📝 Coming Soon |
 | 05 | Conditionals | when, failed_when, changed_when | 📝 Coming Soon |
@@ -211,7 +211,17 @@ ansible-zero-to-expert-masterclass/
 │   ├── 04-dynamic-host-playbook.yml
 │   └── README.md
 │
-├── 📁 chapter-02-inventory/        # Coming soon...
+├── 📁 chapter-02-inventory-deep-dive/  # Inventory mastery
+│   ├── ansible.cfg
+│   ├── inventory/
+│   │   ├── hosts.ini
+│   │   ├── 01-basic-inventory.ini
+│   │   ├── 02-groups-inventory.ini
+│   │   └── ... (6 inventory examples)
+│   ├── 01-target-all-hosts.yml
+│   ├── ... (10 playbooks)
+│   └── README.md
+│
 ├── 📁 chapter-03-variables/        # Coming soon...
 │   ...
 │
