@@ -13,7 +13,7 @@ vpc_name    = "cl-vpc-sandbox"
 subnet_name = "cl-sub-sandbox-web-eu-nrth2-01"
 
 # VM Instance Configuration
-instance_count       = 1
+instance_count       = 3
 instance_name_prefix = "ansible-lab-server"
 machine_type         = "e2-micro"
 vm_image             = "ubuntu-os-cloud/ubuntu-2204-lts"

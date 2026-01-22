@@ -11,9 +11,165 @@ Master Ansible inventory management - from basic host lists to complex group hie
 - Host patterns for targeting specific hosts
 - Using `--limit` for runtime filtering
 
-## Files in this Chapter
+---
 
-### Inventory Examples
+## Quick Start
+
+### Step 1: Navigate to this chapter
+
+```bash
+cd chapter-02-inventory-deep-dive
+```
+
+### Step 2: Update Inventory with Your Server IPs
+
+Edit `inventory/hosts.ini` and replace `<SERVER_X_IP>` with your actual IPs:
+
+```bash
+vim inventory/hosts.ini
+```
+
+Example:
+```ini
+[webservers]
+ansible-lab-server-1 ansible_host=34.2.54.150
+ansible-lab-server-2 ansible_host=34.2.54.151
+
+[dbservers]
+ansible-lab-server-3 ansible_host=34.2.54.152
+```
+
+### Step 3: Verify Your Inventory
+
+```bash
+# List all hosts
+ansible all --list-hosts
+
+# List hosts in webservers group
+ansible webservers --list-hosts
+
+# Show inventory in graph format
+ansible-inventory --graph
+
+# Show inventory with all variables
+ansible-inventory --list
+```
+
+---
+
+## Run the Playbooks
+
+### Playbook 01: Target All Hosts
+
+**Concept:** Run tasks on all hosts in inventory
+
+```bash
+ansible-playbook 01-target-all-hosts.yml
+```
+
+---
+
+### Playbook 02: Target Specific Group
+
+**Concept:** Run tasks only on webservers or dbservers group
+
+```bash
+ansible-playbook 02-target-specific-group.yml
+```
+
+---
+
+### Playbook 03: Target Multiple Groups (Union)
+
+**Concept:** Run tasks on hosts in webservers OR dbservers (Union)
+
+```bash
+ansible-playbook 03-target-multiple-groups.yml
+```
+
+---
+
+### Playbook 04: Host Patterns - Intersection
+
+**Concept:** Run tasks on hosts that are in BOTH webservers AND loadbalancers
+
+```bash
+ansible-playbook 04-host-patterns-intersection.yml
+```
+
+---
+
+### Playbook 05: Host Patterns - Exclusion
+
+**Concept:** Run tasks on all hosts EXCEPT dbservers
+
+```bash
+ansible-playbook 05-host-patterns-exclusion.yml
+```
+
+---
+
+### Playbook 06: Host Patterns - Wildcards
+
+**Concept:** Target hosts using wildcard patterns like `ansible-*`
+
+```bash
+ansible-playbook 06-host-patterns-wildcards.yml
+```
+
+---
+
+### Playbook 07: Host Patterns - Regex
+
+**Concept:** Target hosts using regular expressions
+
+```bash
+ansible-playbook 07-host-patterns-regex.yml
+```
+
+---
+
+### Playbook 08: Display Inventory Information
+
+**Concept:** Display inventory hostname, groups, and all hosts
+
+```bash
+ansible-playbook 08-display-inventory-info.yml
+```
+
+---
+
+### Playbook 09: Display Group Variables
+
+**Concept:** Display variables defined in inventory (group_vars, host_vars)
+
+```bash
+ansible-playbook 09-display-group-variables.yml
+```
+
+---
+
+### Playbook 10: Using --limit Option
+
+**Concept:** Limit playbook execution to specific hosts at runtime
+
+```bash
+# Run on all hosts
+ansible-playbook 10-limit-and-subset.yml
+
+# Run only on webservers group
+ansible-playbook 10-limit-and-subset.yml --limit webservers
+
+# Run only on a specific host
+ansible-playbook 10-limit-and-subset.yml --limit ansible-lab-server-1
+
+# Run on webservers except loadbalancers
+ansible-playbook 10-limit-and-subset.yml --limit 'webservers:!loadbalancers'
+```
+
+---
+
+## Inventory Files Included
 
 | File | Description |
 |------|-------------|
@@ -25,53 +181,25 @@ Master Ansible inventory management - from basic host lists to complex group hie
 | `inventory/05-ranges-inventory.ini` | Using ranges for multiple hosts |
 | `inventory/06-yaml-inventory.yml` | YAML format inventory |
 
-### Playbooks
-
-| Playbook | Concept | Command |
-|----------|---------|---------|
-| `01-target-all-hosts.yml` | Target all hosts | `ansible-playbook 01-target-all-hosts.yml` |
-| `02-target-specific-group.yml` | Target a group | `ansible-playbook 02-target-specific-group.yml` |
-| `03-target-multiple-groups.yml` | Union of groups | `ansible-playbook 03-target-multiple-groups.yml` |
-| `04-host-patterns-intersection.yml` | Intersection (&) | `ansible-playbook 04-host-patterns-intersection.yml` |
-| `05-host-patterns-exclusion.yml` | Exclusion (!) | `ansible-playbook 05-host-patterns-exclusion.yml` |
-| `06-host-patterns-wildcards.yml` | Wildcards (*) | `ansible-playbook 06-host-patterns-wildcards.yml` |
-| `07-host-patterns-regex.yml` | Regex (~) | `ansible-playbook 07-host-patterns-regex.yml` |
-| `08-display-inventory-info.yml` | Inventory variables | `ansible-playbook 08-display-inventory-info.yml` |
-| `09-display-group-variables.yml` | Group/host vars | `ansible-playbook 09-display-group-variables.yml` |
-| `10-limit-and-subset.yml` | --limit option | `ansible-playbook 10-limit-and-subset.yml --limit webservers` |
-
-## Getting Started
-
-### Step 1: Update Inventory
-
-Edit `inventory/hosts.ini` and replace `<SERVER_X_IP>` with your actual IPs:
-
-```ini
-[webservers]
-ansible-lab-server-1 ansible_host=34.x.x.x
-ansible-lab-server-2 ansible_host=34.x.x.x
-
-[dbservers]
-ansible-lab-server-3 ansible_host=34.x.x.x
-```
-
-### Step 2: Verify Inventory
+### Using Different Inventory Files
 
 ```bash
-# List all hosts
-ansible all --list-hosts
+# Use basic inventory
+ansible-playbook 01-target-all-hosts.yml -i inventory/01-basic-inventory.ini
 
-# List hosts in a specific group
-ansible webservers --list-hosts
+# Use groups inventory
+ansible-playbook 02-target-specific-group.yml -i inventory/02-groups-inventory.ini
 
-# Show inventory in graph format
-ansible-inventory --graph
+# Use nested groups inventory
+ansible-playbook 03-target-multiple-groups.yml -i inventory/03-nested-groups-inventory.ini
 
-# Show inventory with all variables
-ansible-inventory --list
+# Use YAML inventory
+ansible-playbook 01-target-all-hosts.yml -i inventory/06-yaml-inventory.yml
 ```
 
-## Host Pattern Reference
+---
+
+## Host Pattern Quick Reference
 
 | Pattern | Meaning | Example |
 |---------|---------|---------|
@@ -79,75 +207,42 @@ ansible-inventory --list
 | `*` | All hosts (wildcard) | `hosts: *` |
 | `groupname` | Single group | `hosts: webservers` |
 | `group1,group2` | Union (OR) | `hosts: webservers,dbservers` |
-| `group1:group2` | Union (OR) | `hosts: webservers:dbservers` |
 | `group1:&group2` | Intersection (AND) | `hosts: webservers:&loadbalancers` |
 | `group1:!group2` | Exclusion (NOT) | `hosts: all:!dbservers` |
 | `*.example.com` | Wildcard match | `hosts: *.example.com` |
 | `~regex` | Regex match | `hosts: ~web-[0-9]+` |
 
-## Inventory Formats
+---
 
-### INI Format (Default)
-
-```ini
-[webservers]
-web1.example.com
-web2.example.com ansible_host=192.168.1.2
-
-[webservers:vars]
-http_port=80
-
-[all:vars]
-ansible_user=ansible
-```
-
-### YAML Format
-
-```yaml
-all:
-  children:
-    webservers:
-      hosts:
-        web1.example.com:
-        web2.example.com:
-          ansible_host: 192.168.1.2
-      vars:
-        http_port: 80
-  vars:
-    ansible_user: ansible
-```
-
-## Special Groups
-
-Ansible automatically creates two groups:
-
-| Group | Contains |
-|-------|----------|
-| `all` | Every host in the inventory |
-| `ungrouped` | Hosts not in any group (except `all`) |
-
-## Command Line Examples
+## Ad-hoc Commands
 
 ```bash
-# Use a different inventory file
-ansible-playbook playbook.yml -i inventory/02-groups-inventory.ini
+# Ping all hosts
+ansible all -m ping
 
-# Limit to specific hosts
-ansible-playbook playbook.yml --limit webservers
-ansible-playbook playbook.yml --limit 'webservers:!loadbalancers'
-ansible-playbook playbook.yml --limit ansible-lab-server-1
-
-# Ad-hoc commands with patterns
+# Ping only webservers
 ansible webservers -m ping
+
+# Ping hosts in both webservers AND loadbalancers
 ansible 'webservers:&loadbalancers' -m ping
-ansible 'all:!dbservers' -m shell -a "uptime"
+
+# Ping all hosts EXCEPT dbservers
+ansible 'all:!dbservers' -m ping
+
+# Run shell command on webservers
+ansible webservers -m shell -a "uptime"
+
+# Check disk space on all hosts
+ansible all -m command -a "df -h"
 ```
+
+---
 
 ## Key Takeaways
 
-1. **Groups** organize hosts logically (webservers, dbservers, production, etc.)
-2. **Nested groups** create hierarchies using `:children`
-3. **Variables** can be set per-host or per-group
-4. **Host patterns** give precise control over which hosts to target
-5. **YAML format** is more readable for complex inventories
-6. **`--limit`** filters hosts at runtime without changing playbooks
+1. **Groups** - Organize hosts logically (webservers, dbservers, production)
+2. **Nested groups** - Create hierarchies using `:children`
+3. **Variables** - Set per-host or per-group in inventory
+4. **Host patterns** - Precise control over which hosts to target
+5. **YAML format** - More readable for complex inventories
+6. **`--limit`** - Filter hosts at runtime without changing playbooks

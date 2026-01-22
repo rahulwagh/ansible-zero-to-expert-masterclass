@@ -1,7 +1,7 @@
 [ansible_lab_servers]
-ansible-lab-server-1 ansible_host=34.2.48.253
-ansible-lab-server-2 ansible_host=34.2.63.178
-ansible-lab-server-3 ansible_host=34.2.61.235
+ansible-lab-server-1 ansible_host=34.2.54.150
+ansible-lab-server-2 ansible_host=34.2.62.15
+ansible-lab-server-3 ansible_host=34.2.56.133
 
 [ansible_lab_servers:vars]
 ansible_user=ansible

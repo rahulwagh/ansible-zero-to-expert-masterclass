@@ -58,7 +58,7 @@ ansible-playbook 02-hello-world-playbook.yml
 ansible-playbook 03-gather-facts-playbook.yml
 
 # Run dynamic host playbook (pass IP from command line)
-ansible-playbook 04-dynamic-host-playbook.yml -i "34.2.48.253," -e "target_host=34.2.48.253"
+ansible-playbook 04-dynamic-host-playbook.yml -i "34.2.54.150," -e "target_host=34.2.54.150"
 ```
 
 ## Key Concepts Covered
