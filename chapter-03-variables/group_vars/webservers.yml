@@ -1,0 +1,29 @@
+# ==============================================
+# Variables for webservers group
+# ==============================================
+# These variables apply only to hosts in the webservers group
+# Precedence: Higher than group_vars/all.yml
+
+# Web server configuration
+http_port: 80
+https_port: 443
+document_root: /var/www/html
+server_name: "webserver.example.com"
+
+# Nginx specific settings
+nginx_worker_processes: auto
+nginx_worker_connections: 1024
+
+# Application settings
+app_name: "MyWebApp"
+app_version: "1.0.0"
+app_environment: "production"
+
+# Web packages
+web_packages:
+  - nginx
+  - php-fpm
+  - php-mysql
+
+# Variable used to demonstrate precedence
+precedence_test: "from group_vars/webservers.yml"

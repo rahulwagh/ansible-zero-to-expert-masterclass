@@ -1,0 +1,160 @@
+---
+# ==============================================
+# 07 - Register Variables
+# ==============================================
+# Run: ansible-playbook 07-register-variables.yml
+#
+# The 'register' keyword captures the output of a task
+# into a variable for use in later tasks.
+
+- name: Demonstrate register variables
+  hosts: all
+  gather_facts: false
+
+  tasks:
+    - name: Run a command and register the output
+      ansible.builtin.command: hostname
+      register: hostname_result
+      changed_when: false
+
+    - name: Display the full registered variable
+      ansible.builtin.debug:
+        var: hostname_result
+
+    - name: Display just the stdout
+      ansible.builtin.debug:
+        msg: "Hostname is: {{ hostname_result.stdout }}"
+
+    - name: Display return code
+      ansible.builtin.debug:
+        msg: "Command return code: {{ hostname_result.rc }}"
+
+---
+# Second play: Using register with shell commands
+- name: Demonstrate register with shell module
+  hosts: all
+  gather_facts: false
+
+  tasks:
+    - name: Get disk usage
+      ansible.builtin.shell: df -h / | tail -1 | awk '{print $5}'
+      register: disk_usage
+      changed_when: false
+
+    - name: Display disk usage
+      ansible.builtin.debug:
+        msg: "Root partition usage: {{ disk_usage.stdout }}"
+
+    - name: Get memory info
+      ansible.builtin.shell: free -m | grep Mem | awk '{print $3"/"$2" MB"}'
+      register: memory_info
+      changed_when: false
+
+    - name: Display memory usage
+      ansible.builtin.debug:
+        msg: "Memory usage: {{ memory_info.stdout }}"
+
+    - name: Check if a service is running
+      ansible.builtin.shell: systemctl is-active sshd || true
+      register: sshd_status
+      changed_when: false
+
+    - name: Display service status
+      ansible.builtin.debug:
+        msg: "SSH service status: {{ sshd_status.stdout }}"
+
+---
+# Third play: Using register with conditionals
+- name: Using registered variables in conditionals
+  hosts: all
+  gather_facts: false
+
+  tasks:
+    - name: Check if a file exists
+      ansible.builtin.stat:
+        path: /etc/hosts
+      register: hosts_file
+
+    - name: Display file info if it exists
+      ansible.builtin.debug:
+        msg: |
+          File /etc/hosts exists: {{ hosts_file.stat.exists }}
+          File size: {{ hosts_file.stat.size }} bytes
+          File mode: {{ hosts_file.stat.mode }}
+      when: hosts_file.stat.exists
+
+    - name: Check if nginx is installed
+      ansible.builtin.command: which nginx
+      register: nginx_check
+      ignore_errors: true
+      changed_when: false
+
+    - name: Report nginx status
+      ansible.builtin.debug:
+        msg: "Nginx is installed at {{ nginx_check.stdout }}"
+      when: nginx_check.rc == 0
+
+    - name: Report nginx not found
+      ansible.builtin.debug:
+        msg: "Nginx is not installed on this host"
+      when: nginx_check.rc != 0
+
+---
+# Fourth play: Using register with loops
+- name: Demonstrate register with loops
+  hosts: all
+  gather_facts: false
+
+  tasks:
+    - name: Check multiple files
+      ansible.builtin.stat:
+        path: "{{ item }}"
+      loop:
+        - /etc/hosts
+        - /etc/passwd
+        - /etc/shadow
+        - /nonexistent/file
+      register: file_checks
+
+    - name: Display file check results
+      ansible.builtin.debug:
+        msg: "{{ item.item }}: exists={{ item.stat.exists }}"
+      loop: "{{ file_checks.results }}"
+
+    - name: List only existing files
+      ansible.builtin.debug:
+        msg: "Found: {{ item.item }}"
+      loop: "{{ file_checks.results }}"
+      when: item.stat.exists
+
+---
+# Fifth play: Practical example with register
+- name: Practical example - Check system health
+  hosts: all
+  gather_facts: false
+
+  tasks:
+    - name: Get uptime
+      ansible.builtin.command: uptime -p
+      register: uptime_result
+      changed_when: false
+
+    - name: Get load average
+      ansible.builtin.shell: cat /proc/loadavg | awk '{print $1, $2, $3}'
+      register: load_result
+      changed_when: false
+
+    - name: Count running processes
+      ansible.builtin.shell: ps aux | wc -l
+      register: process_count
+      changed_when: false
+
+    - name: Display system health summary
+      ansible.builtin.debug:
+        msg: |
+          ============================================
+          System Health Report for {{ inventory_hostname }}
+          ============================================
+          Uptime: {{ uptime_result.stdout }}
+          Load Average: {{ load_result.stdout }}
+          Running Processes: {{ process_count.stdout | int - 1 }}

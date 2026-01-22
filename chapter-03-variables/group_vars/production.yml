@@ -1,0 +1,20 @@
+# ==============================================
+# Variables for production group
+# ==============================================
+# These variables apply to all hosts in production environment
+
+# Environment identifier
+environment: "production"
+env_short: "prod"
+
+# Logging level
+log_level: "warn"
+debug_mode: false
+
+# Monitoring
+monitoring_enabled: true
+alerting_enabled: true
+
+# Security settings
+firewall_enabled: true
+selinux_mode: "enforcing"

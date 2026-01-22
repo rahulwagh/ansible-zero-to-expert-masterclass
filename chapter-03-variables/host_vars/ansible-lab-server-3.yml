@@ -1,0 +1,26 @@
+# ==============================================
+# Variables for ansible-lab-server-3
+# ==============================================
+# These variables apply ONLY to this specific host
+# Precedence: Higher than group_vars
+
+# Host-specific configuration
+server_role: "database"
+server_description: "Primary database server"
+
+# Override database port for this host
+db_port: 3307
+
+# Host-specific database settings
+mysql_max_connections: 200
+slow_query_log: true
+slow_query_time: 2
+
+# Custom tags for this host
+host_tags:
+  - primary
+  - database
+  - backend
+
+# Variable used to demonstrate precedence
+precedence_test: "from host_vars/ansible-lab-server-3.yml"

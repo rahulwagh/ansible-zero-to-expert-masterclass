@@ -1,0 +1,213 @@
+---
+# ==============================================
+# 09 - Magic Variables (Special Variables)
+# ==============================================
+# Run: ansible-playbook 09-magic-variables.yml
+#
+# Magic variables are special variables automatically
+# set by Ansible. They provide information about hosts,
+# groups, and the play itself.
+
+- name: Demonstrate magic variables
+  hosts: all
+  gather_facts: false
+
+  tasks:
+    - name: Display inventory_hostname
+      ansible.builtin.debug:
+        msg: |
+          inventory_hostname: {{ inventory_hostname }}
+          (The name of the current host as in inventory)
+
+    - name: Display inventory_hostname_short
+      ansible.builtin.debug:
+        msg: |
+          inventory_hostname_short: {{ inventory_hostname_short }}
+          (The short hostname - first part before the dot)
+
+    - name: Display ansible_host
+      ansible.builtin.debug:
+        msg: |
+          ansible_host: {{ ansible_host | default('not set - using inventory_hostname') }}
+          (The IP or hostname to connect to)
+
+    - name: Display group_names
+      ansible.builtin.debug:
+        msg: |
+          group_names: {{ group_names | join(', ') }}
+          (List of groups the current host belongs to)
+
+    - name: Display groups
+      ansible.builtin.debug:
+        msg: |
+          groups keys: {{ groups.keys() | list | join(', ') }}
+          (Dictionary of all groups and their members)
+
+    - name: Show members of each group
+      ansible.builtin.debug:
+        msg: "Group '{{ item }}' members: {{ groups[item] | join(', ') }}"
+      loop: "{{ groups.keys() | list }}"
+      run_once: true
+
+---
+# Second play: hostvars magic variable
+- name: Demonstrate hostvars
+  hosts: all
+  gather_facts: false
+
+  tasks:
+    - name: Display hostvars for current host
+      ansible.builtin.debug:
+        msg: |
+          hostvars contains all variables for all hosts.
+
+          Current host variables count: {{ hostvars[inventory_hostname] | length }}
+
+    - name: Access another host's variables
+      ansible.builtin.debug:
+        msg: |
+          Accessing variables from ansible-lab-server-1:
+          server_role: {{ hostvars['ansible-lab-server-1'].server_role | default('undefined') }}
+      run_once: true
+      when: "'ansible-lab-server-1' in groups['all']"
+
+    - name: Loop through all hosts and show their server_role
+      ansible.builtin.debug:
+        msg: "{{ item }}: server_role={{ hostvars[item].server_role | default('not defined') }}"
+      loop: "{{ groups['all'] }}"
+      run_once: true
+
+---
+# Third play: Play context variables
+- name: Demonstrate play context variables
+  hosts: all
+  gather_facts: false
+
+  vars:
+    my_play_var: "hello"
+
+  tasks:
+    - name: Display ansible_play_hosts
+      ansible.builtin.debug:
+        msg: |
+          ansible_play_hosts: {{ ansible_play_hosts | join(', ') }}
+          (List of all hosts in the current play)
+      run_once: true
+
+    - name: Display ansible_play_hosts_all
+      ansible.builtin.debug:
+        msg: |
+          ansible_play_hosts_all: {{ ansible_play_hosts_all | join(', ') }}
+          (All hosts in play, even those that failed)
+      run_once: true
+
+    - name: Display ansible_play_batch
+      ansible.builtin.debug:
+        msg: |
+          ansible_play_batch: {{ ansible_play_batch | join(', ') }}
+          (Hosts in current batch - affected by serial)
+      run_once: true
+
+    - name: Display play_hosts (deprecated but still works)
+      ansible.builtin.debug:
+        msg: "play_hosts: {{ play_hosts | join(', ') }}"
+      run_once: true
+
+---
+# Fourth play: Inventory variables
+- name: Demonstrate inventory magic variables
+  hosts: all
+  gather_facts: false
+
+  tasks:
+    - name: Display inventory_dir
+      ansible.builtin.debug:
+        msg: |
+          inventory_dir: {{ inventory_dir }}
+          (Directory of the inventory file)
+      run_once: true
+
+    - name: Display inventory_file
+      ansible.builtin.debug:
+        msg: |
+          inventory_file: {{ inventory_file }}
+          (Path to the inventory file)
+      run_once: true
+
+---
+# Fifth play: Playbook variables
+- name: Demonstrate playbook magic variables
+  hosts: all
+  gather_facts: false
+
+  tasks:
+    - name: Display playbook_dir
+      ansible.builtin.debug:
+        msg: |
+          playbook_dir: {{ playbook_dir }}
+          (Directory of the playbook)
+      run_once: true
+
+    - name: Display ansible_check_mode
+      ansible.builtin.debug:
+        msg: |
+          ansible_check_mode: {{ ansible_check_mode }}
+          (True if running in check mode --check)
+      run_once: true
+
+    - name: Display ansible_version
+      ansible.builtin.debug:
+        msg: |
+          ansible_version:
+            full: {{ ansible_version.full }}
+            major: {{ ansible_version.major }}
+            minor: {{ ansible_version.minor }}
+      run_once: true
+
+---
+# Sixth play: Role and include variables
+- name: Demonstrate other magic variables
+  hosts: all
+  gather_facts: false
+
+  tasks:
+    - name: Display ansible_loop variables in a loop
+      ansible.builtin.debug:
+        msg: |
+          Item: {{ item }}
+          Index: {{ ansible_loop.index }}
+          Index0: {{ ansible_loop.index0 }}
+          First: {{ ansible_loop.first }}
+          Last: {{ ansible_loop.last }}
+          Length: {{ ansible_loop.length }}
+      loop:
+        - apple
+        - banana
+        - cherry
+      loop_control:
+        extended: true
+
+    - name: Summary of key magic variables
+      ansible.builtin.debug:
+        msg: |
+          ============================================
+          Key Magic Variables Summary
+          ============================================
+          Host Info:
+            - inventory_hostname: Current host name
+            - ansible_host: Connection address
+            - group_names: Groups this host is in
+
+          All Hosts:
+            - groups: All groups and members
+            - hostvars: All vars for all hosts
+            - ansible_play_hosts: Hosts in current play
+
+          Paths:
+            - playbook_dir: Playbook directory
+            - inventory_dir: Inventory directory
+
+          Runtime:
+            - ansible_check_mode: Check mode status
+            - ansible_version: Ansible version info
+      run_once: true

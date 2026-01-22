@@ -1,0 +1,28 @@
+# ==============================================
+# Web Server Configuration Variables
+# ==============================================
+# Load this file using vars_files for web-related playbooks
+
+# Web server settings
+web_server: "nginx"
+web_user: "www-data"
+web_group: "www-data"
+
+# Virtual host configuration
+vhosts:
+  - name: "default"
+    server_name: "example.com"
+    document_root: "/var/www/html"
+    ssl_enabled: false
+  - name: "secure"
+    server_name: "secure.example.com"
+    document_root: "/var/www/secure"
+    ssl_enabled: true
+    ssl_cert: "/etc/ssl/certs/example.crt"
+    ssl_key: "/etc/ssl/private/example.key"
+
+# PHP configuration
+php_version: "8.1"
+php_memory_limit: "256M"
+php_upload_max_filesize: "64M"
+php_max_execution_time: 300

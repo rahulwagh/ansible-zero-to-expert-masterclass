@@ -1,0 +1,27 @@
+# ==============================================
+# Variables for ALL hosts
+# ==============================================
+# These variables apply to every host in inventory
+# Precedence: Lowest (can be overridden by group_vars, host_vars, etc.)
+
+# Organization info
+organization: "TechCorp Inc"
+admin_email: "admin@techcorp.com"
+
+# Common packages to install on all servers
+common_packages:
+  - vim
+  - curl
+  - wget
+  - htop
+
+# NTP configuration
+ntp_servers:
+  - 0.pool.ntp.org
+  - 1.pool.ntp.org
+
+# Default timezone
+timezone: "UTC"
+
+# Variable used to demonstrate precedence
+precedence_test: "from group_vars/all.yml"

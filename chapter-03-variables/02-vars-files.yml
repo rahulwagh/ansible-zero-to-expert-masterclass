@@ -1,0 +1,79 @@
+---
+# ==============================================
+# 02 - Variables from External Files (vars_files)
+# ==============================================
+# Run: ansible-playbook 02-vars-files.yml
+#
+# This playbook demonstrates loading variables from
+# external YAML files using the 'vars_files' keyword.
+
+- name: Demonstrate vars_files
+  hosts: webservers
+  gather_facts: false
+
+  vars_files:
+    - vars/common.yml
+    - vars/web_config.yml
+
+  tasks:
+    - name: Display variables from common.yml
+      ansible.builtin.debug:
+        msg: |
+          App Name: {{ app_name }}
+          App Version: {{ app_version }}
+          App Environment: {{ app_env }}
+
+    - name: Display API settings from common.yml
+      ansible.builtin.debug:
+        msg: |
+          API Base URL: {{ api_base_url }}
+          API Timeout: {{ api_timeout }}s
+          API Retries: {{ api_retries }}
+
+    - name: Display notification settings
+      ansible.builtin.debug:
+        msg: |
+          Email notifications enabled: {{ notifications.email.enabled }}
+          Email recipients: {{ notifications.email.recipients | join(', ') }}
+          Slack channel: {{ notifications.slack.channel }}
+
+    - name: Display web server settings from web_config.yml
+      ansible.builtin.debug:
+        msg: |
+          Web Server: {{ web_server }}
+          Web User: {{ web_user }}
+          PHP Version: {{ php_version }}
+
+    - name: Display virtual hosts
+      ansible.builtin.debug:
+        msg: "VHost: {{ item.name }} -> {{ item.server_name }} (SSL: {{ item.ssl_enabled }})"
+      loop: "{{ vhosts }}"
+
+---
+# Second play: Loading different vars_files for database servers
+- name: Demonstrate vars_files for database servers
+  hosts: dbservers
+  gather_facts: false
+
+  vars_files:
+    - vars/common.yml
+    - vars/db_config.yml
+
+  tasks:
+    - name: Display database settings
+      ansible.builtin.debug:
+        msg: |
+          DB Server: {{ db_server }}
+          DB Version: {{ db_version }}
+
+    - name: Display MySQL tuning settings
+      ansible.builtin.debug:
+        msg: |
+          Max Connections: {{ mysql_settings.max_connections }}
+          Buffer Pool Size: {{ mysql_settings.innodb_buffer_pool_size }}
+          Slow Query Log: {{ mysql_settings.slow_query_log }}
+
+    - name: Display database configurations
+      ansible.builtin.debug:
+        msg: "Database: {{ item.name }}, User: {{ item.user }}, Privileges: {{ item.privileges }}"
+      loop: "{{ databases }}"

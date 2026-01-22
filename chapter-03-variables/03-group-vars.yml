@@ -1,0 +1,120 @@
+---
+# ==============================================
+# 03 - Group Variables (group_vars/)
+# ==============================================
+# Run: ansible-playbook 03-group-vars.yml
+#
+# This playbook demonstrates group_vars - variables that
+# are automatically loaded based on group membership.
+#
+# Directory structure:
+#   group_vars/
+#     all.yml        -> Applied to ALL hosts
+#     webservers.yml -> Applied to hosts in [webservers] group
+#     dbservers.yml  -> Applied to hosts in [dbservers] group
+#     production.yml -> Applied to hosts in [production] group
+
+- name: Demonstrate group_vars for all hosts
+  hosts: all
+  gather_facts: false
+
+  tasks:
+    - name: Display variables from group_vars/all.yml
+      ansible.builtin.debug:
+        msg: |
+          Organization: {{ organization }}
+          Admin Email: {{ admin_email }}
+          Timezone: {{ timezone }}
+
+    - name: Display common packages (from group_vars/all.yml)
+      ansible.builtin.debug:
+        msg: "Common packages: {{ common_packages | join(', ') }}"
+
+    - name: Display NTP servers
+      ansible.builtin.debug:
+        msg: "NTP Server: {{ item }}"
+      loop: "{{ ntp_servers }}"
+
+---
+# Second play: Show webservers group_vars
+- name: Demonstrate group_vars for webservers
+  hosts: webservers
+  gather_facts: false
+
+  tasks:
+    - name: Display webservers group variables
+      ansible.builtin.debug:
+        msg: |
+          HTTP Port: {{ http_port }}
+          HTTPS Port: {{ https_port }}
+          Document Root: {{ document_root }}
+          Server Name: {{ server_name }}
+
+    - name: Display Nginx settings
+      ansible.builtin.debug:
+        msg: |
+          Worker Processes: {{ nginx_worker_processes }}
+          Worker Connections: {{ nginx_worker_connections }}
+
+    - name: Display application settings
+      ansible.builtin.debug:
+        msg: |
+          App Name: {{ app_name }}
+          App Version: {{ app_version }}
+          App Environment: {{ app_environment }}
+
+    - name: Display web packages
+      ansible.builtin.debug:
+        msg: "Web packages: {{ web_packages | join(', ') }}"
+
+---
+# Third play: Show dbservers group_vars
+- name: Demonstrate group_vars for dbservers
+  hosts: dbservers
+  gather_facts: false
+
+  tasks:
+    - name: Display database server group variables
+      ansible.builtin.debug:
+        msg: |
+          DB Port: {{ db_port }}
+          DB Name: {{ db_name }}
+          DB User: {{ db_user }}
+
+    - name: Display MySQL settings
+      ansible.builtin.debug:
+        msg: |
+          Max Connections: {{ mysql_max_connections }}
+          InnoDB Buffer Pool: {{ mysql_innodb_buffer_pool_size }}
+
+    - name: Display backup configuration
+      ansible.builtin.debug:
+        msg: |
+          Backup Enabled: {{ backup_enabled }}
+          Retention Days: {{ backup_retention_days }}
+          Backup Directory: {{ backup_directory }}
+
+    - name: Display database packages
+      ansible.builtin.debug:
+        msg: "DB packages: {{ db_packages | join(', ') }}"
+
+---
+# Fourth play: Show production group_vars
+- name: Demonstrate group_vars for production (nested group)
+  hosts: production
+  gather_facts: false
+
+  tasks:
+    - name: Display production environment variables
+      ansible.builtin.debug:
+        msg: |
+          Environment: {{ environment }}
+          Env Short: {{ env_short }}
+          Log Level: {{ log_level }}
+          Debug Mode: {{ debug_mode }}
+
+    - name: Display security settings
+      ansible.builtin.debug:
+        msg: |
+          Firewall Enabled: {{ firewall_enabled }}
+          SELinux Mode: {{ selinux_mode }}

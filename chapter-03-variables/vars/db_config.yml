@@ -1,0 +1,27 @@
+# ==============================================
+# Database Configuration Variables
+# ==============================================
+# Load this file using vars_files for database-related playbooks
+
+# Database server settings
+db_server: "mysql"
+db_version: "8.0"
+
+# Database credentials
+databases:
+  - name: "app_production"
+    user: "app_prod_user"
+    password: "{{ vault_app_prod_password | default('secure_password') }}"
+    privileges: "ALL"
+  - name: "app_staging"
+    user: "app_stage_user"
+    password: "{{ vault_app_stage_password | default('staging_password') }}"
+    privileges: "ALL"
+
+# MySQL tuning
+mysql_settings:
+  max_connections: 200
+  query_cache_size: "64M"
+  innodb_buffer_pool_size: "512M"
+  slow_query_log: true
+  slow_query_time: 2

@@ -1,0 +1,25 @@
+# ==============================================
+# Variables for ansible-lab-server-2
+# ==============================================
+# These variables apply ONLY to this specific host
+# Precedence: Higher than group_vars
+
+# Host-specific configuration
+server_role: "secondary_web"
+server_description: "Secondary web server / Load balanced"
+
+# Keep default HTTP port from group_vars
+# http_port: 80  (inherited from group_vars/webservers.yml)
+
+# Host-specific app settings
+max_connections: 150
+memory_limit: "256M"
+
+# Custom tags for this host
+host_tags:
+  - secondary
+  - web
+  - loadbalanced
+
+# Variable used to demonstrate precedence
+precedence_test: "from host_vars/ansible-lab-server-2.yml"

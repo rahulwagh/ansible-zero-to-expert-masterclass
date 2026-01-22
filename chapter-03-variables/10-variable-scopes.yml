@@ -1,0 +1,188 @@
+---
+# ==============================================
+# 10 - Variable Scopes
+# ==============================================
+# Run: ansible-playbook 10-variable-scopes.yml
+#
+# Ansible has three main variable scopes:
+# 1. Global scope - set by config, environment, command line
+# 2. Play scope - set in play, vars, vars_files, vars_prompt
+# 3. Host scope - set in inventory, host_vars, group_vars, facts
+
+- name: "Play 1: Demonstrate play scope variables"
+  hosts: all
+  gather_facts: false
+
+  vars:
+    play_scoped_var: "I exist only in Play 1"
+    shared_var: "Set in Play 1"
+
+  tasks:
+    - name: Display play-scoped variable
+      ansible.builtin.debug:
+        msg: "play_scoped_var: {{ play_scoped_var }}"
+
+    - name: Display shared_var in Play 1
+      ansible.builtin.debug:
+        msg: "shared_var in Play 1: {{ shared_var }}"
+
+---
+- name: "Play 2: Show that play scope doesn't persist"
+  hosts: all
+  gather_facts: false
+
+  vars:
+    shared_var: "Set in Play 2"
+
+  tasks:
+    - name: Try to access Play 1's variable (will fail)
+      ansible.builtin.debug:
+        msg: "play_scoped_var: {{ play_scoped_var | default('UNDEFINED - not accessible from Play 1') }}"
+
+    - name: Show shared_var in Play 2
+      ansible.builtin.debug:
+        msg: "shared_var in Play 2: {{ shared_var }}"
+
+---
+- name: "Play 3: Demonstrate host scope with set_fact"
+  hosts: all
+  gather_facts: false
+
+  tasks:
+    - name: Set a host-scoped variable using set_fact
+      ansible.builtin.set_fact:
+        host_scoped_var: "I persist for {{ inventory_hostname }}"
+
+    - name: Display host-scoped variable
+      ansible.builtin.debug:
+        msg: "host_scoped_var: {{ host_scoped_var }}"
+
+---
+- name: "Play 4: Host scope persists across plays"
+  hosts: all
+  gather_facts: false
+
+  tasks:
+    - name: Access host_scoped_var from Play 3
+      ansible.builtin.debug:
+        msg: "host_scoped_var still available: {{ host_scoped_var }}"
+
+---
+- name: "Play 5: Demonstrate set_fact with different values per host"
+  hosts: all
+  gather_facts: false
+
+  tasks:
+    - name: Set different values based on group membership
+      ansible.builtin.set_fact:
+        server_type: >-
+          {%- if 'webservers' in group_names -%}
+          webserver
+          {%- elif 'dbservers' in group_names -%}
+          database
+          {%- else -%}
+          unknown
+          {%- endif -%}
+
+    - name: Display server_type
+      ansible.builtin.debug:
+        msg: "{{ inventory_hostname }} is a {{ server_type }}"
+
+---
+- name: "Play 6: Block scope demonstration"
+  hosts: all
+  gather_facts: false
+
+  vars:
+    outer_var: "I'm in play scope"
+
+  tasks:
+    - name: Show outer_var before block
+      ansible.builtin.debug:
+        msg: "Before block: outer_var = {{ outer_var }}"
+
+    - name: Block with local variables
+      vars:
+        block_var: "I only exist in this block"
+        outer_var: "I override play scope in this block"
+      block:
+        - name: Inside block - show block_var
+          ansible.builtin.debug:
+            msg: "block_var: {{ block_var }}"
+
+        - name: Inside block - show outer_var (overridden)
+          ansible.builtin.debug:
+            msg: "outer_var (in block): {{ outer_var }}"
+
+    - name: After block - block_var is gone
+      ansible.builtin.debug:
+        msg: "block_var: {{ block_var | default('UNDEFINED - block scope ended') }}"
+
+    - name: After block - outer_var is restored
+      ansible.builtin.debug:
+        msg: "outer_var (after block): {{ outer_var }}"
+
+---
+- name: "Play 7: Task scope demonstration"
+  hosts: all
+  gather_facts: false
+
+  vars:
+    task_var: "play scope value"
+
+  tasks:
+    - name: Show task_var before override
+      ansible.builtin.debug:
+        msg: "task_var: {{ task_var }}"
+
+    - name: Task with local variable override
+      ansible.builtin.debug:
+        msg: "task_var (in task): {{ task_var }}"
+      vars:
+        task_var: "task scope value - only for this task"
+
+    - name: Show task_var after (back to play scope)
+      ansible.builtin.debug:
+        msg: "task_var: {{ task_var }}"
+
+---
+- name: "Play 8: Variable scope summary"
+  hosts: all
+  gather_facts: false
+
+  tasks:
+    - name: Display scope summary
+      ansible.builtin.debug:
+        msg: |
+          ============================================
+          Variable Scope Summary
+          ============================================
+
+          1. GLOBAL SCOPE
+             - Set by: ansible.cfg, environment vars, -e flag
+             - Lifetime: Entire playbook run
+             - Example: ansible_user, -e "my_var=value"
+
+          2. PLAY SCOPE
+             - Set by: vars, vars_files, vars_prompt in a play
+             - Lifetime: Current play only
+             - Resets between plays
+
+          3. HOST SCOPE
+             - Set by: inventory, host_vars, group_vars, set_fact
+             - Lifetime: Entire playbook run (per host)
+             - Persists across plays for each host
+
+          4. BLOCK SCOPE
+             - Set by: vars in a block
+             - Lifetime: Tasks within the block only
+
+          5. TASK SCOPE
+             - Set by: vars on a task
+             - Lifetime: That single task only
+
+          Key Points:
+          - set_fact creates HOST scope (persists)
+          - vars in play creates PLAY scope (doesn't persist)
+          - extra vars (-e) have highest precedence
+      run_once: true

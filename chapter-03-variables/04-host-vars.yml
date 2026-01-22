@@ -1,0 +1,67 @@
+---
+# ==============================================
+# 04 - Host Variables (host_vars/)
+# ==============================================
+# Run: ansible-playbook 04-host-vars.yml
+#
+# This playbook demonstrates host_vars - variables that
+# are automatically loaded for specific hosts.
+#
+# Directory structure:
+#   host_vars/
+#     ansible-lab-server-1.yml -> Applied only to ansible-lab-server-1
+#     ansible-lab-server-2.yml -> Applied only to ansible-lab-server-2
+#     ansible-lab-server-3.yml -> Applied only to ansible-lab-server-3
+#
+# host_vars have HIGHER precedence than group_vars
+
+- name: Demonstrate host_vars
+  hosts: all
+  gather_facts: false
+
+  tasks:
+    - name: Display host-specific variables
+      ansible.builtin.debug:
+        msg: |
+          Host: {{ inventory_hostname }}
+          Server Role: {{ server_role }}
+          Description: {{ server_description }}
+
+    - name: Display host tags
+      ansible.builtin.debug:
+        msg: "Host Tags: {{ host_tags | join(', ') }}"
+
+    - name: Display host-specific settings
+      ansible.builtin.debug:
+        msg: "Max Connections: {{ max_connections }}, Memory Limit: {{ memory_limit }}"
+      when: max_connections is defined
+
+---
+# Second play: Demonstrate host_vars overriding group_vars
+- name: Show host_vars overriding group_vars
+  hosts: webservers
+  gather_facts: false
+
+  tasks:
+    - name: Display HTTP port (may be overridden by host_vars)
+      ansible.builtin.debug:
+        msg: |
+          Host: {{ inventory_hostname }}
+          HTTP Port: {{ http_port }}
+          Note: ansible-lab-server-1 has http_port=8080 in host_vars
+                ansible-lab-server-2 inherits http_port=80 from group_vars
+
+---
+# Third play: Database server host_vars
+- name: Show database server host_vars
+  hosts: dbservers
+  gather_facts: false
+
+  tasks:
+    - name: Display database port (overridden in host_vars)
+      ansible.builtin.debug:
+        msg: |
+          Host: {{ inventory_hostname }}
+          DB Port: {{ db_port }}
+          Slow Query Log: {{ slow_query_log | default('not set') }}
+          Note: db_port is 3307 in host_vars (overrides 3306 from group_vars)

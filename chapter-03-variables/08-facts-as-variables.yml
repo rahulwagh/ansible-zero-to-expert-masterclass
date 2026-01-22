@@ -1,0 +1,171 @@
+---
+# ==============================================
+# 08 - Ansible Facts as Variables
+# ==============================================
+# Run: ansible-playbook 08-facts-as-variables.yml
+#
+# Ansible facts are system information automatically
+# gathered from managed hosts. They act as variables.
+#
+# Disable gathering with: gather_facts: false
+# Manually gather with: ansible.builtin.setup module
+
+- name: Demonstrate Ansible facts
+  hosts: all
+  gather_facts: true  # Enable fact gathering (default)
+
+  tasks:
+    - name: Display all facts (verbose - uncomment to see all)
+      ansible.builtin.debug:
+        var: ansible_facts
+      when: false  # Set to true to see all facts
+
+    - name: Display OS information
+      ansible.builtin.debug:
+        msg: |
+          ============================================
+          Operating System Information
+          ============================================
+          OS Family: {{ ansible_os_family }}
+          Distribution: {{ ansible_distribution }}
+          Distribution Version: {{ ansible_distribution_version }}
+          Distribution Release: {{ ansible_distribution_release }}
+          Kernel: {{ ansible_kernel }}
+          Architecture: {{ ansible_architecture }}
+
+    - name: Display hostname and network info
+      ansible.builtin.debug:
+        msg: |
+          ============================================
+          Network Information
+          ============================================
+          Hostname: {{ ansible_hostname }}
+          FQDN: {{ ansible_fqdn }}
+          Default IPv4: {{ ansible_default_ipv4.address | default('N/A') }}
+          Default Gateway: {{ ansible_default_ipv4.gateway | default('N/A') }}
+          All IPv4 Addresses: {{ ansible_all_ipv4_addresses | default([]) | join(', ') }}
+
+    - name: Display hardware information
+      ansible.builtin.debug:
+        msg: |
+          ============================================
+          Hardware Information
+          ============================================
+          Processor Cores: {{ ansible_processor_cores }}
+          Processor Count: {{ ansible_processor_count }}
+          Total CPUs: {{ ansible_processor_vcpus }}
+          Memory Total: {{ ansible_memtotal_mb }} MB
+          Memory Free: {{ ansible_memfree_mb }} MB
+
+    - name: Display disk information
+      ansible.builtin.debug:
+        msg: |
+          ============================================
+          Disk Information
+          ============================================
+          Mounts: {{ ansible_mounts | map(attribute='mount') | list | join(', ') }}
+
+    - name: Display mount details
+      ansible.builtin.debug:
+        msg: "{{ item.mount }}: {{ item.size_total | int // (1024*1024*1024) }}GB total, {{ item.size_available | int // (1024*1024*1024) }}GB free"
+      loop: "{{ ansible_mounts }}"
+      when: item.size_total | int > 1000000000
+
+---
+# Second play: Using facts in conditionals
+- name: Using facts for conditional tasks
+  hosts: all
+  gather_facts: true
+
+  tasks:
+    - name: Task for Debian-based systems
+      ansible.builtin.debug:
+        msg: "This is a Debian/Ubuntu system - would use apt"
+      when: ansible_os_family == "Debian"
+
+    - name: Task for RedHat-based systems
+      ansible.builtin.debug:
+        msg: "This is a RedHat/CentOS system - would use yum/dnf"
+      when: ansible_os_family == "RedHat"
+
+    - name: Check if system has enough memory
+      ansible.builtin.debug:
+        msg: "System has {{ ansible_memtotal_mb }}MB RAM - sufficient for application"
+      when: ansible_memtotal_mb >= 1024
+
+    - name: Warning for low memory systems
+      ansible.builtin.debug:
+        msg: "WARNING: System only has {{ ansible_memtotal_mb }}MB RAM!"
+      when: ansible_memtotal_mb < 1024
+
+---
+# Third play: Custom facts
+- name: Working with custom facts
+  hosts: all
+  gather_facts: true
+
+  tasks:
+    - name: Create custom fact directory
+      ansible.builtin.file:
+        path: /etc/ansible/facts.d
+        state: directory
+        mode: '0755'
+      become: true
+
+    - name: Create a custom fact file
+      ansible.builtin.copy:
+        dest: /etc/ansible/facts.d/custom.fact
+        mode: '0644'
+        content: |
+          [application]
+          name=MyApp
+          version=1.0.0
+          environment=production
+
+          [deployment]
+          last_deploy=2024-01-15
+          deployed_by=ansible
+      become: true
+
+    - name: Re-gather facts to pick up custom facts
+      ansible.builtin.setup:
+        filter: ansible_local
+
+    - name: Display custom facts
+      ansible.builtin.debug:
+        msg: |
+          Custom Facts:
+          App Name: {{ ansible_local.custom.application.name | default('not set') }}
+          App Version: {{ ansible_local.custom.application.version | default('not set') }}
+          Environment: {{ ansible_local.custom.application.environment | default('not set') }}
+      when: ansible_local.custom is defined
+
+---
+# Fourth play: Fact caching and filtering
+- name: Demonstrate fact filtering
+  hosts: all
+  gather_facts: false  # We'll gather facts manually with filters
+
+  tasks:
+    - name: Gather only network facts
+      ansible.builtin.setup:
+        gather_subset:
+          - network
+
+    - name: Display gathered network facts
+      ansible.builtin.debug:
+        msg: "Network interface info gathered. Default IP: {{ ansible_default_ipv4.address | default('N/A') }}"
+
+    - name: Gather minimal facts (fastest)
+      ansible.builtin.setup:
+        gather_subset:
+          - '!all'
+          - min
+
+    - name: Gather specific fact using filter
+      ansible.builtin.setup:
+        filter: ansible_hostname
+
+    - name: Display filtered fact
+      ansible.builtin.debug:
+        msg: "Hostname: {{ ansible_hostname }}"

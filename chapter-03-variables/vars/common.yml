@@ -1,0 +1,28 @@
+# ==============================================
+# Common Variables (loaded via vars_files)
+# ==============================================
+# These variables can be loaded into any playbook using vars_files
+
+# Application configuration
+app_name: "MyApplication"
+app_version: "2.0.0"
+app_env: "production"
+
+# API settings
+api_base_url: "https://api.example.com"
+api_timeout: 30
+api_retries: 3
+
+# Notification settings
+notifications:
+  email:
+    enabled: true
+    recipients:
+      - devops@example.com
+      - alerts@example.com
+  slack:
+    enabled: true
+    channel: "#alerts"
+
+# Variable used to demonstrate precedence
+precedence_test: "from vars/common.yml (vars_files)"

@@ -1,0 +1,25 @@
+# ==============================================
+# Variables for ansible-lab-server-1
+# ==============================================
+# These variables apply ONLY to this specific host
+# Precedence: Higher than group_vars
+
+# Host-specific configuration
+server_role: "primary_web"
+server_description: "Primary web server"
+
+# Custom HTTP port for this host
+http_port: 8080
+
+# Host-specific app settings
+max_connections: 200
+memory_limit: "512M"
+
+# Custom tags for this host
+host_tags:
+  - primary
+  - web
+  - frontend
+
+# Variable used to demonstrate precedence
+precedence_test: "from host_vars/ansible-lab-server-1.yml"

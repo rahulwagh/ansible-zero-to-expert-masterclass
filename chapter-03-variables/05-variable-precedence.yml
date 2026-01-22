@@ -1,0 +1,143 @@
+---
+# ==============================================
+# 05 - Variable Precedence
+# ==============================================
+# Run these commands to see how variables are overridden:
+#
+#   ansible-playbook 05-variable-precedence.yml
+#   ansible-playbook 05-variable-precedence.yml -e "precedence_test='from command line (-e)'"
+#
+# Ansible Variable Precedence (lowest to highest):
+#
+#  1. command line values (for example, -u my_user)
+#  2. role defaults (role/defaults/main.yml)
+#  3. inventory file or script group vars
+#  4. inventory group_vars/all
+#  5. playbook group_vars/all
+#  6. inventory group_vars/*
+#  7. playbook group_vars/*
+#  8. inventory file or script host vars
+#  9. inventory host_vars/*
+# 10. playbook host_vars/*
+# 11. host facts / cached set_facts
+# 12. play vars
+# 13. play vars_prompt
+# 14. play vars_files
+# 15. role vars (role/vars/main.yml)
+# 16. block vars (only for tasks in block)
+# 17. task vars (only for the task)
+# 18. include_vars
+# 19. set_facts / registered vars
+# 20. role (and include_role) params
+# 21. include params
+# 22. extra vars (for example, -e "user=my_user") <- HIGHEST PRECEDENCE
+
+- name: Demonstrate variable precedence
+  hosts: all
+  gather_facts: false
+
+  vars:
+    # Play vars (precedence level 12)
+    precedence_test: "from play vars"
+    play_var: "I am a play variable"
+
+  vars_files:
+    # vars_files (precedence level 14)
+    - vars/common.yml
+
+  tasks:
+    - name: Show the precedence_test variable value
+      ansible.builtin.debug:
+        msg: |
+          ============================================
+          Variable Precedence Test
+          ============================================
+          Current value of 'precedence_test': {{ precedence_test }}
+
+          This variable is defined in multiple places:
+          - group_vars/all.yml
+          - group_vars/webservers.yml (if webserver)
+          - group_vars/dbservers.yml (if dbserver)
+          - host_vars/<hostname>.yml
+          - vars/common.yml (vars_files)
+          - play vars (this playbook)
+          - command line -e (if provided)
+
+    - name: Show which variables are available
+      ansible.builtin.debug:
+        msg: |
+          From group_vars/all.yml: organization = {{ organization }}
+          From play vars: play_var = {{ play_var }}
+          From vars/common.yml: app_name = {{ app_name }}
+
+---
+# Second play: Demonstrate set_fact overriding
+- name: Demonstrate set_fact precedence
+  hosts: all
+  gather_facts: false
+
+  vars:
+    my_variable: "original value from play vars"
+
+  tasks:
+    - name: Show original value
+      ansible.builtin.debug:
+        msg: "Before set_fact: my_variable = {{ my_variable }}"
+
+    - name: Override using set_fact (higher precedence)
+      ansible.builtin.set_fact:
+        my_variable: "overridden by set_fact"
+
+    - name: Show value after set_fact
+      ansible.builtin.debug:
+        msg: "After set_fact: my_variable = {{ my_variable }}"
+
+---
+# Third play: Demonstrate block vars
+- name: Demonstrate block-level variables
+  hosts: all
+  gather_facts: false
+
+  vars:
+    block_test: "from play vars"
+
+  tasks:
+    - name: Show value before block
+      ansible.builtin.debug:
+        msg: "Before block: block_test = {{ block_test }}"
+
+    - name: Block with its own variables
+      vars:
+        block_test: "from block vars"
+      block:
+        - name: Show value inside block
+          ansible.builtin.debug:
+            msg: "Inside block: block_test = {{ block_test }}"
+
+    - name: Show value after block
+      ansible.builtin.debug:
+        msg: "After block: block_test = {{ block_test }}"
+
+---
+# Fourth play: Demonstrate task vars (highest except -e)
+- name: Demonstrate task-level variables
+  hosts: all
+  gather_facts: false
+
+  vars:
+    task_test: "from play vars"
+
+  tasks:
+    - name: Show value before task with vars
+      ansible.builtin.debug:
+        msg: "Before: task_test = {{ task_test }}"
+
+    - name: Task with its own variables (overrides play vars)
+      ansible.builtin.debug:
+        msg: "With task vars: task_test = {{ task_test }}"
+      vars:
+        task_test: "from task vars"
+
+    - name: Show value after (back to play vars)
+      ansible.builtin.debug:
+        msg: "After: task_test = {{ task_test }}"

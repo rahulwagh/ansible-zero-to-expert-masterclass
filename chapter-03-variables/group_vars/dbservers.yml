@@ -1,0 +1,29 @@
+# ==============================================
+# Variables for dbservers group
+# ==============================================
+# These variables apply only to hosts in the dbservers group
+# Precedence: Higher than group_vars/all.yml
+
+# Database configuration
+db_port: 3306
+db_name: "app_database"
+db_user: "app_user"
+db_root_password: "{{ vault_db_root_password | default('changeme') }}"
+
+# MySQL specific settings
+mysql_max_connections: 150
+mysql_innodb_buffer_pool_size: "256M"
+
+# Backup configuration
+backup_enabled: true
+backup_retention_days: 7
+backup_directory: /var/backups/mysql
+
+# Database packages
+db_packages:
+  - mysql-server
+  - mysql-client
+  - python3-mysqldb
+
+# Variable used to demonstrate precedence
+precedence_test: "from group_vars/dbservers.yml"

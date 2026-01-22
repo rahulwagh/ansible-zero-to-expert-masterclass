@@ -1,0 +1,117 @@
+---
+# ==============================================
+# 06 - Extra Variables (-e / --extra-vars)
+# ==============================================
+# Extra vars have the HIGHEST precedence and override everything!
+#
+# Run examples:
+#   ansible-playbook 06-extra-vars.yml
+#   ansible-playbook 06-extra-vars.yml -e "target_env=staging"
+#   ansible-playbook 06-extra-vars.yml -e "target_env=production debug=true"
+#   ansible-playbook 06-extra-vars.yml -e '{"target_env": "development", "version": "2.0"}'
+#   ansible-playbook 06-extra-vars.yml -e "@vars/common.yml"
+#   ansible-playbook 06-extra-vars.yml --extra-vars "user_name=john deploy_branch=feature-x"
+
+- name: Demonstrate extra vars (-e)
+  hosts: all
+  gather_facts: false
+
+  vars:
+    # These can all be overridden with -e
+    target_env: "default"
+    version: "1.0.0"
+    debug: false
+    user_name: "ansible"
+    deploy_branch: "main"
+
+  tasks:
+    - name: Display current variable values
+      ansible.builtin.debug:
+        msg: |
+          ============================================
+          Extra Variables Demo
+          ============================================
+          Target Environment: {{ target_env }}
+          Version: {{ version }}
+          Debug Mode: {{ debug }}
+          User Name: {{ user_name }}
+          Deploy Branch: {{ deploy_branch }}
+
+          Try running with different -e options:
+          -e "target_env=staging"
+          -e "version=2.0.0 debug=true"
+          -e '{"target_env": "dev", "version": "3.0"}'
+
+    - name: Conditional task based on target_env
+      ansible.builtin.debug:
+        msg: "Running in PRODUCTION mode - extra caution!"
+      when: target_env == "production"
+
+    - name: Conditional task for staging
+      ansible.builtin.debug:
+        msg: "Running in STAGING mode"
+      when: target_env == "staging"
+
+    - name: Show debug information when debug is enabled
+      ansible.builtin.debug:
+        msg: |
+          DEBUG INFO:
+          - Inventory Hostname: {{ inventory_hostname }}
+          - Groups: {{ group_names | join(', ') }}
+          - All Variables: Check with -e "debug=true" -v
+      when: debug | bool
+
+---
+# Second play: Using extra vars for deployment
+- name: Simulate deployment with extra vars
+  hosts: webservers
+  gather_facts: false
+
+  vars:
+    # Deployment settings - override with -e
+    deploy_version: "1.0.0"
+    deploy_env: "production"
+    rollback_enabled: true
+    notify_slack: true
+
+  tasks:
+    - name: Display deployment configuration
+      ansible.builtin.debug:
+        msg: |
+          ============================================
+          Deployment Configuration
+          ============================================
+          Version to Deploy: {{ deploy_version }}
+          Target Environment: {{ deploy_env }}
+          Rollback Enabled: {{ rollback_enabled }}
+          Slack Notifications: {{ notify_slack }}
+
+          Example deployment command:
+          ansible-playbook 06-extra-vars.yml \
+            -e "deploy_version=2.5.0" \
+            -e "deploy_env=staging" \
+            -e "notify_slack=false"
+
+    - name: Simulate deployment step
+      ansible.builtin.debug:
+        msg: "Deploying version {{ deploy_version }} to {{ deploy_env }}..."
+
+---
+# Third play: Loading extra vars from a file
+- name: Demonstrate loading extra vars from file
+  hosts: all
+  gather_facts: false
+
+  tasks:
+    - name: Instructions for loading vars from file
+      ansible.builtin.debug:
+        msg: |
+          You can load extra vars from a file using:
+
+          ansible-playbook 06-extra-vars.yml -e "@vars/common.yml"
+
+          Or combine file and inline vars:
+          ansible-playbook 06-extra-vars.yml -e "@vars/common.yml" -e "app_version=3.0"
+
+          The @ symbol tells Ansible to load vars from the file.
+      run_once: true

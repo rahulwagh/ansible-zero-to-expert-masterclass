@@ -1,0 +1,86 @@
+---
+# ==============================================
+# 01 - Variables Defined Inline (vars)
+# ==============================================
+# Run: ansible-playbook 01-vars-inline.yml
+#
+# This playbook demonstrates defining variables directly
+# in the playbook using the 'vars' keyword.
+
+- name: Demonstrate inline variables
+  hosts: all
+  gather_facts: false
+
+  vars:
+    # Simple string variable
+    greeting: "Hello from Ansible"
+
+    # Numeric variable
+    max_retries: 3
+    timeout_seconds: 30
+
+    # Boolean variable
+    debug_mode: true
+
+    # List variable
+    packages:
+      - nginx
+      - php
+      - mysql-client
+
+    # Dictionary variable
+    server_config:
+      hostname: "webserver01"
+      port: 8080
+      ssl_enabled: true
+
+    # Multi-line string using YAML literal block
+    welcome_message: |
+      Welcome to the server!
+      This message spans
+      multiple lines.
+
+    # Variable referencing another variable
+    full_greeting: "{{ greeting }} - Debug mode is {{ debug_mode }}"
+
+  tasks:
+    - name: Display simple string variable
+      ansible.builtin.debug:
+        msg: "{{ greeting }}"
+
+    - name: Display numeric variables
+      ansible.builtin.debug:
+        msg: "Max retries: {{ max_retries }}, Timeout: {{ timeout_seconds }}s"
+
+    - name: Display boolean variable
+      ansible.builtin.debug:
+        msg: "Debug mode enabled: {{ debug_mode }}"
+
+    - name: Display list variable
+      ansible.builtin.debug:
+        msg: "Packages to install: {{ packages }}"
+
+    - name: Loop through list variable
+      ansible.builtin.debug:
+        msg: "Package: {{ item }}"
+      loop: "{{ packages }}"
+
+    - name: Display dictionary variable
+      ansible.builtin.debug:
+        msg: "Server config: {{ server_config }}"
+
+    - name: Access dictionary keys
+      ansible.builtin.debug:
+        msg: "Hostname: {{ server_config.hostname }}, Port: {{ server_config.port }}"
+
+    - name: Alternative dictionary access using brackets
+      ansible.builtin.debug:
+        msg: "SSL Enabled: {{ server_config['ssl_enabled'] }}"
+
+    - name: Display multi-line string
+      ansible.builtin.debug:
+        msg: "{{ welcome_message }}"
+
+    - name: Display variable referencing another variable
+      ansible.builtin.debug:
+        msg: "{{ full_greeting }}"
