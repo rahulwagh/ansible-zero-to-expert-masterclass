@@ -49,7 +49,7 @@
         msg: "VHost: {{ item.name }} -> {{ item.server_name }} (SSL: {{ item.ssl_enabled }})"
       loop: "{{ vhosts }}"
 
----
+
 # Second play: Loading different vars_files for database servers
 - name: Demonstrate vars_files for database servers
   hosts: dbservers

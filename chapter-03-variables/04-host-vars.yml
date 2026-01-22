@@ -36,7 +36,7 @@
         msg: "Max Connections: {{ max_connections }}, Memory Limit: {{ memory_limit }}"
       when: max_connections is defined
 
----
+
 # Second play: Demonstrate host_vars overriding group_vars
 - name: Show host_vars overriding group_vars
   hosts: webservers
@@ -51,7 +51,7 @@
           Note: ansible-lab-server-1 has http_port=8080 in host_vars
                 ansible-lab-server-2 inherits http_port=80 from group_vars
 
----
+
 # Third play: Database server host_vars
 - name: Show database server host_vars
   hosts: dbservers

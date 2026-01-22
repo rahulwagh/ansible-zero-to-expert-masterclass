@@ -26,7 +26,7 @@
       ansible.builtin.debug:
         msg: "shared_var in Play 1: {{ shared_var }}"
 
----
+
 - name: "Play 2: Show that play scope doesn't persist"
   hosts: all
   gather_facts: false
@@ -43,7 +43,7 @@
       ansible.builtin.debug:
         msg: "shared_var in Play 2: {{ shared_var }}"
 
----
+
 - name: "Play 3: Demonstrate host scope with set_fact"
   hosts: all
   gather_facts: false
@@ -57,7 +57,7 @@
       ansible.builtin.debug:
         msg: "host_scoped_var: {{ host_scoped_var }}"
 
----
+
 - name: "Play 4: Host scope persists across plays"
   hosts: all
   gather_facts: false
@@ -67,7 +67,7 @@
       ansible.builtin.debug:
         msg: "host_scoped_var still available: {{ host_scoped_var }}"
 
----
+
 - name: "Play 5: Demonstrate set_fact with different values per host"
   hosts: all
   gather_facts: false
@@ -88,7 +88,7 @@
       ansible.builtin.debug:
         msg: "{{ inventory_hostname }} is a {{ server_type }}"
 
----
+
 - name: "Play 6: Block scope demonstration"
   hosts: all
   gather_facts: false
@@ -122,7 +122,7 @@
       ansible.builtin.debug:
         msg: "outer_var (after block): {{ outer_var }}"
 
----
+
 - name: "Play 7: Task scope demonstration"
   hosts: all
   gather_facts: false
@@ -145,7 +145,7 @@
       ansible.builtin.debug:
         msg: "task_var: {{ task_var }}"
 
----
+
 - name: "Play 8: Variable scope summary"
   hosts: all
   gather_facts: false

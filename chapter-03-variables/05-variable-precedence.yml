@@ -70,7 +70,7 @@
           From play vars: play_var = {{ play_var }}
           From vars/common.yml: app_name = {{ app_name }}
 
----
+
 # Second play: Demonstrate set_fact overriding
 - name: Demonstrate set_fact precedence
   hosts: all
@@ -92,7 +92,7 @@
       ansible.builtin.debug:
         msg: "After set_fact: my_variable = {{ my_variable }}"
 
----
+
 # Third play: Demonstrate block vars
 - name: Demonstrate block-level variables
   hosts: all
@@ -118,7 +118,7 @@
       ansible.builtin.debug:
         msg: "After block: block_test = {{ block_test }}"
 
----
+
 # Fourth play: Demonstrate task vars (highest except -e)
 - name: Demonstrate task-level variables
   hosts: all

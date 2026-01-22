@@ -71,7 +71,7 @@
       loop: "{{ ansible_mounts }}"
       when: item.size_total | int > 1000000000
 
----
+
 # Second play: Using facts in conditionals
 - name: Using facts for conditional tasks
   hosts: all
@@ -98,7 +98,7 @@
         msg: "WARNING: System only has {{ ansible_memtotal_mb }}MB RAM!"
       when: ansible_memtotal_mb < 1024
 
----
+
 # Third play: Custom facts
 - name: Working with custom facts
   hosts: all
@@ -140,7 +140,7 @@
           Environment: {{ ansible_local.custom.application.environment | default('not set') }}
       when: ansible_local.custom is defined
 
----
+
 # Fourth play: Fact caching and filtering
 - name: Demonstrate fact filtering
   hosts: all

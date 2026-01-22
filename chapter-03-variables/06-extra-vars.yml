@@ -61,7 +61,7 @@
           - All Variables: Check with -e "debug=true" -v
       when: debug | bool
 
----
+
 # Second play: Using extra vars for deployment
 - name: Simulate deployment with extra vars
   hosts: webservers
@@ -96,7 +96,7 @@
       ansible.builtin.debug:
         msg: "Deploying version {{ deploy_version }} to {{ deploy_env }}..."
 
----
+
 # Third play: Loading extra vars from a file
 - name: Demonstrate loading extra vars from file
   hosts: all

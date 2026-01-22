@@ -29,7 +29,7 @@
       ansible.builtin.debug:
         msg: "Command return code: {{ hostname_result.rc }}"
 
----
+
 # Second play: Using register with shell commands
 - name: Demonstrate register with shell module
   hosts: all
@@ -63,7 +63,7 @@
       ansible.builtin.debug:
         msg: "SSH service status: {{ sshd_status.stdout }}"
 
----
+
 # Third play: Using register with conditionals
 - name: Using registered variables in conditionals
   hosts: all
@@ -99,7 +99,7 @@
         msg: "Nginx is not installed on this host"
       when: nginx_check.rc != 0
 
----
+
 # Fourth play: Using register with loops
 - name: Demonstrate register with loops
   hosts: all
@@ -127,7 +127,7 @@
       loop: "{{ file_checks.results }}"
       when: item.stat.exists
 
----
+
 # Fifth play: Practical example with register
 - name: Practical example - Check system health
   hosts: all

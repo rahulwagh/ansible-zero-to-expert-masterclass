@@ -35,7 +35,7 @@
         msg: "NTP Server: {{ item }}"
       loop: "{{ ntp_servers }}"
 
----
+
 # Second play: Show webservers group_vars
 - name: Demonstrate group_vars for webservers
   hosts: webservers
@@ -67,7 +67,7 @@
       ansible.builtin.debug:
         msg: "Web packages: {{ web_packages | join(', ') }}"
 
----
+
 # Third play: Show dbservers group_vars
 - name: Demonstrate group_vars for dbservers
   hosts: dbservers
@@ -98,7 +98,7 @@
       ansible.builtin.debug:
         msg: "DB packages: {{ db_packages | join(', ') }}"
 
----
+
 # Fourth play: Show production group_vars
 - name: Demonstrate group_vars for production (nested group)
   hosts: production
