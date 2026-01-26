@@ -1,0 +1,83 @@
+---
+# ==============================================
+# 02 - Loop with Dictionaries
+# ==============================================
+# Run: ansible-playbook 02-loop-with-dict.yml
+
+- name: Looping over dictionaries
+  hosts: all
+  gather_facts: false
+
+  vars:
+    # Simple dictionary
+    app_ports:
+      nginx: 80
+      mysql: 3306
+      redis: 6379
+
+    # Nested dictionary
+    environments:
+      production:
+        url: "https://prod.example.com"
+        debug: false
+        replicas: 3
+      staging:
+        url: "https://stage.example.com"
+        debug: true
+        replicas: 1
+
+  tasks:
+    # Loop over dictionary using dict2items
+    - name: "dict2items: Show app ports"
+      debug:
+        msg: "{{ item.key }}: port {{ item.value }}"
+      loop: "{{ app_ports | dict2items }}"
+
+    # Legacy with_dict
+    - name: "with_dict: Show app ports"
+      debug:
+        msg: "{{ item.key }} runs on port {{ item.value }}"
+      with_dict: "{{ app_ports }}"
+
+    # Loop over nested dictionary
+    - name: "Nested dict: Environment configs"
+      debug:
+        msg: "{{ item.key }}: {{ item.value.url }} (debug={{ item.value.debug }})"
+      loop: "{{ environments | dict2items }}"
+
+    # Access only keys or values
+    - name: "Dict keys only"
+      debug:
+        msg: "App: {{ item }}"
+      loop: "{{ app_ports.keys() | list }}"
+
+    - name: "Dict values only"
+      debug:
+        msg: "Port: {{ item }}"
+      loop: "{{ app_ports.values() | list }}"
+
+
+- name: Complex data structures
+  hosts: all
+  gather_facts: false
+
+  vars:
+    servers:
+      webservers:
+        - web1.example.com
+        - web2.example.com
+      dbservers:
+        - db1.example.com
+
+  tasks:
+    # Loop through dict of lists
+    - name: "Dict of lists"
+      debug:
+        msg: "{{ item.key }}: {{ item.value | join(', ') }}"
+      loop: "{{ servers | dict2items }}"
+
+    # Flatten and loop
+    - name: "All servers (flattened)"
+      debug:
+        msg: "Server: {{ item }}"
+      loop: "{{ servers.values() | flatten }}"

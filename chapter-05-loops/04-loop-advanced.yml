@@ -1,0 +1,120 @@
+---
+# ==============================================
+# 04 - Advanced Loops
+# ==============================================
+# Run: ansible-playbook 04-loop-advanced.yml
+
+- name: Nested loops and special loops
+  hosts: all
+  gather_facts: false
+
+  vars:
+    users:
+      - alice
+      - bob
+    groups:
+      - developers
+      - testers
+
+    numbers:
+      - 1
+      - 2
+      - 3
+
+  tasks:
+    # Nested loop using product filter
+    - name: "Nested: Users x Groups (product)"
+      debug:
+        msg: "Add {{ item.0 }} to {{ item.1 }}"
+      loop: "{{ users | product(groups) | list }}"
+
+    # Legacy with_nested
+    - name: "with_nested: Same result"
+      debug:
+        msg: "Add {{ item.0 }} to {{ item.1 }}"
+      with_nested:
+        - "{{ users }}"
+        - "{{ groups }}"
+
+    # Loop with sequence
+    - name: "with_sequence: Generate numbers"
+      debug:
+        msg: "Number: {{ item }}"
+      with_sequence: start=1 end=5
+
+    # Range filter (modern approach)
+    - name: "range: Generate numbers"
+      debug:
+        msg: "Count: {{ item }}"
+      loop: "{{ range(1, 6) | list }}"
+
+    # Loop with zip (parallel lists)
+    - name: "zip: Parallel lists"
+      debug:
+        msg: "{{ item.0 }} = {{ item.1 }}"
+      loop: "{{ ['a', 'b', 'c'] | zip([1, 2, 3]) | list }}"
+
+
+- name: Register with loops
+  hosts: all
+  gather_facts: false
+
+  tasks:
+    # Register stores ALL results
+    - name: Check multiple files
+      stat:
+        path: "{{ item }}"
+      loop:
+        - /etc/hosts
+        - /etc/passwd
+        - /nonexistent
+      register: file_checks
+
+    # Access results
+    - name: Show existing files
+      debug:
+        msg: "{{ item.item }} exists: {{ item.stat.exists }}"
+      loop: "{{ file_checks.results }}"
+
+    # Filter results with selectattr
+    - name: Only existing files
+      debug:
+        msg: "Found: {{ item.item }}"
+      loop: "{{ file_checks.results | selectattr('stat.exists', 'true') | list }}"
+
+
+- name: Loop over files
+  hosts: all
+  gather_facts: false
+
+  tasks:
+    # with_fileglob - files matching pattern
+    - name: "with_fileglob: YAML files"
+      debug:
+        msg: "Found: {{ item | basename }}"
+      with_fileglob:
+        - "*.yml"
+
+    # with_lines - output of command
+    - name: "with_lines: Command output"
+      debug:
+        msg: "Line: {{ item }}"
+      with_lines: "head -3 /etc/passwd"
+
+
+- name: Until loop (retry)
+  hosts: all
+  gather_facts: false
+
+  tasks:
+    # Retry until condition is met
+    - name: "until: Retry until success"
+      shell: "echo $((RANDOM % 10))"
+      register: result
+      until: result.stdout | int > 7
+      retries: 5
+      delay: 1
+
+    - name: Show result
+      debug:
+        msg: "Got {{ result.stdout }} after {{ result.attempts }} attempts"

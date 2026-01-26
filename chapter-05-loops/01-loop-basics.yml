@@ -1,0 +1,85 @@
+---
+# ==============================================
+# 01 - Loop Basics
+# ==============================================
+# Run: ansible-playbook 01-loop-basics.yml
+
+- name: Basic loop examples
+  hosts: all
+  gather_facts: false
+
+  vars:
+    packages:
+      - nginx
+      - git
+      - curl
+      - vim
+
+    users:
+      - name: alice
+        uid: 1001
+        groups: developers
+      - name: bob
+        uid: 1002
+        groups: admins
+      - name: charlie
+        uid: 1003
+        groups: developers
+
+  tasks:
+    # Simple loop over a list
+    - name: "Loop: Install packages"
+      debug:
+        msg: "Installing {{ item }}"
+      loop: "{{ packages }}"
+
+    # Loop with index using ansible_loop
+    - name: "Loop: Show index"
+      debug:
+        msg: "{{ ansible_loop.index }}. {{ item }}"
+      loop: "{{ packages }}"
+      loop_control:
+        extended: true
+
+    # Loop over list of dictionaries
+    - name: "Loop: Create users"
+      debug:
+        msg: "Creating user {{ item.name }} (UID: {{ item.uid }}) in {{ item.groups }}"
+      loop: "{{ users }}"
+
+    # Access specific dict attributes
+    - name: "Loop: Show user names only"
+      debug:
+        msg: "User: {{ item.name }}"
+      loop: "{{ users }}"
+
+    # Loop with when condition
+    - name: "Loop: Only developers"
+      debug:
+        msg: "{{ item.name }} is a developer"
+      loop: "{{ users }}"
+      when: item.groups == "developers"
+
+
+- name: Legacy with_items (still works)
+  hosts: all
+  gather_facts: false
+
+  tasks:
+    # with_items - older syntax, same result
+    - name: "with_items: Simple list"
+      debug:
+        msg: "Item: {{ item }}"
+      with_items:
+        - apple
+        - banana
+        - cherry
+
+    # Inline list with loop
+    - name: "loop: Inline list"
+      debug:
+        msg: "Fruit: {{ item }}"
+      loop:
+        - apple
+        - banana
+        - cherry

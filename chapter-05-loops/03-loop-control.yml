@@ -1,0 +1,83 @@
+---
+# ==============================================
+# 03 - Loop Control
+# ==============================================
+# Run: ansible-playbook 03-loop-control.yml
+
+- name: Loop control options
+  hosts: all
+  gather_facts: false
+
+  vars:
+    users:
+      - name: alice
+        password: secret123
+        email: alice@example.com
+      - name: bob
+        password: secret456
+        email: bob@example.com
+
+    items:
+      - first
+      - second
+      - third
+      - fourth
+      - fifth
+
+  tasks:
+    # Default output shows full item (can expose secrets!)
+    - name: "Default: Shows everything"
+      debug:
+        msg: "Processing {{ item.name }}"
+      loop: "{{ users }}"
+
+    # label: Control what's shown in output
+    - name: "label: Hide sensitive data"
+      debug:
+        msg: "Creating user {{ item.name }}"
+      loop: "{{ users }}"
+      loop_control:
+        label: "{{ item.name }}"
+
+    # index_var: Custom index variable name
+    - name: "index_var: Custom counter"
+      debug:
+        msg: "{{ my_index }}: {{ item }}"
+      loop: "{{ items }}"
+      loop_control:
+        index_var: my_index
+
+    # extended: Access full loop info
+    - name: "extended: Full loop details"
+      debug:
+        msg: |
+          Item: {{ item }}
+          Index: {{ ansible_loop.index }} (1-based)
+          Index0: {{ ansible_loop.index0 }} (0-based)
+          First: {{ ansible_loop.first }}
+          Last: {{ ansible_loop.last }}
+          Length: {{ ansible_loop.length }}
+      loop: "{{ items }}"
+      loop_control:
+        extended: true
+
+    # pause: Add delay between iterations
+    - name: "pause: 1 second between items"
+      debug:
+        msg: "Processing {{ item }} (with 1s delay)"
+      loop:
+        - task1
+        - task2
+        - task3
+      loop_control:
+        pause: 1
+
+    # Combine multiple loop_control options
+    - name: "Combined: label + index_var + extended"
+      debug:
+        msg: "[{{ idx }}] {{ item.name }} - {{ 'LAST' if ansible_loop.last else '' }}"
+      loop: "{{ users }}"
+      loop_control:
+        label: "{{ item.name }}"
+        index_var: idx
+        extended: true
