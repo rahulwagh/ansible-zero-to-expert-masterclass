@@ -1,0 +1,70 @@
+---
+# ==============================================
+# 03 - When with Register
+# ==============================================
+# Run: ansible-playbook 03-when-with-register.yml
+
+- name: Conditionals with registered variables
+  hosts: all
+  gather_facts: false
+
+  tasks:
+    # Check file existence
+    - name: Check if /etc/hosts exists
+      stat:
+        path: /etc/hosts
+      register: hosts_file
+
+    - name: File exists
+      debug:
+        msg: "/etc/hosts exists ({{ hosts_file.stat.size }} bytes)"
+      when: hosts_file.stat.exists
+
+    # Check command result
+    - name: Check if nginx is installed
+      command: which nginx
+      register: nginx_check
+      ignore_errors: true
+      changed_when: false
+
+    - name: Nginx found
+      debug:
+        msg: "Nginx at {{ nginx_check.stdout }}"
+      when: nginx_check.rc == 0
+
+    - name: Nginx not found
+      debug:
+        msg: "Nginx not installed - would install here"
+      when: nginx_check.rc != 0
+
+    # Check disk usage
+    - name: Get disk usage
+      shell: df / | tail -1 | awk '{print $5}' | tr -d '%'
+      register: disk_usage
+      changed_when: false
+
+    - name: Disk OK
+      debug:
+        msg: "Disk usage: {{ disk_usage.stdout }}%"
+      when: disk_usage.stdout | int <= 80
+
+    - name: Disk Warning
+      debug:
+        msg: "WARNING: Disk at {{ disk_usage.stdout }}%!"
+      when: disk_usage.stdout | int > 80
+
+    # Check based on 'changed' status
+    - name: Create temp file
+      file:
+        path: /tmp/ansible_test
+        state: touch
+      register: file_result
+
+    - name: File was created/modified
+      debug:
+        msg: "File was {{ 'created' if file_result.changed else 'already exists' }}"
+
+    - name: Cleanup
+      file:
+        path: /tmp/ansible_test
+        state: absent

@@ -1,0 +1,92 @@
+---
+# ==============================================
+# 04 - failed_when and changed_when
+# ==============================================
+# Run: ansible-playbook 04-failed-changed-when.yml
+
+- name: Custom failure and change conditions
+  hosts: all
+  gather_facts: false
+
+  tasks:
+    # ============ failed_when ============
+
+    # Default: non-zero return = failure
+    # With failed_when: customize when task fails
+
+    - name: "failed_when: Only fail if rc >= 2"
+      shell: exit 1
+      register: result
+      failed_when: result.rc >= 2
+
+    - name: Show rc=1 didn't fail
+      debug:
+        msg: "Exit code was {{ result.rc }} but didn't fail"
+
+    # Fail based on output content
+    - name: "failed_when: Check for ERROR in output"
+      shell: echo "Status OK"
+      register: status
+      failed_when: "'ERROR' in status.stdout"
+
+    # Never fail (for optional checks)
+    - name: "failed_when: false - Never fails"
+      command: /bin/false
+      register: always_ok
+      failed_when: false
+
+    - name: Show it didn't fail
+      debug:
+        msg: "rc={{ always_ok.rc }} but task succeeded"
+
+    # ============ changed_when ============
+
+    # Default: command/shell always report "changed"
+    # With changed_when: customize when task reports changed
+
+    - name: "changed_when: false - Read-only command"
+      command: whoami
+      register: user
+      changed_when: false
+
+    - name: Show no change reported
+      debug:
+        msg: "User is {{ user.stdout }}, changed={{ user.changed }}"
+
+    # Change based on output
+    - name: "changed_when: Based on output"
+      shell: |
+        if [ -f /tmp/marker ]; then
+          echo "EXISTS"
+        else
+          touch /tmp/marker
+          echo "CREATED"
+        fi
+      register: marker
+      changed_when: "'CREATED' in marker.stdout"
+
+    - name: Show change status
+      debug:
+        msg: "{{ marker.stdout }} - changed={{ marker.changed }}"
+
+    # Run again to show idempotency
+    - name: "Run again (should show no change)"
+      shell: |
+        if [ -f /tmp/marker ]; then
+          echo "EXISTS"
+        else
+          touch /tmp/marker
+          echo "CREATED"
+        fi
+      register: marker2
+      changed_when: "'CREATED' in marker2.stdout"
+
+    - name: Second run status
+      debug:
+        msg: "{{ marker2.stdout }} - changed={{ marker2.changed }}"
+
+    - name: Cleanup
+      file:
+        path: /tmp/marker
+        state: absent
+      changed_when: false

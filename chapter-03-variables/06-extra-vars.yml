@@ -63,55 +63,55 @@
 
 
 # Second play: Using extra vars for deployment
-- name: Simulate deployment with extra vars
-  hosts: webservers
-  gather_facts: false
-
-  vars:
-    # Deployment settings - override with -e
-    deploy_version: "1.0.0"
-    deploy_env: "production"
-    rollback_enabled: true
-    notify_slack: true
-
-  tasks:
-    - name: Display deployment configuration
-      ansible.builtin.debug:
-        msg: |
-          ============================================
-          Deployment Configuration
-          ============================================
-          Version to Deploy: {{ deploy_version }}
-          Target Environment: {{ deploy_env }}
-          Rollback Enabled: {{ rollback_enabled }}
-          Slack Notifications: {{ notify_slack }}
-
-          Example deployment command:
-          ansible-playbook 06-extra-vars.yml \
-            -e "deploy_version=2.5.0" \
-            -e "deploy_env=staging" \
-            -e "notify_slack=false"
-
-    - name: Simulate deployment step
-      ansible.builtin.debug:
-        msg: "Deploying version {{ deploy_version }} to {{ deploy_env }}..."
-
-
-# Third play: Loading extra vars from a file
-- name: Demonstrate loading extra vars from file
-  hosts: all
-  gather_facts: false
-
-  tasks:
-    - name: Instructions for loading vars from file
-      ansible.builtin.debug:
-        msg: |
-          You can load extra vars from a file using:
-
-          ansible-playbook 06-extra-vars.yml -e "@vars/common.yml"
-
-          Or combine file and inline vars:
-          ansible-playbook 06-extra-vars.yml -e "@vars/common.yml" -e "app_version=3.0"
-
-          The @ symbol tells Ansible to load vars from the file.
-      run_once: true
+#- name: Simulate deployment with extra vars
+#  hosts: webservers
+#  gather_facts: false
+#
+#  vars:
+#    # Deployment settings - override with -e
+#    deploy_version: "1.0.0"
+#    deploy_env: "production"
+#    rollback_enabled: true
+#    notify_slack: true
+#
+#  tasks:
+#    - name: Display deployment configuration
+#      ansible.builtin.debug:
+#        msg: |
+#          ============================================
+#          Deployment Configuration
+#          ============================================
+#          Version to Deploy: {{ deploy_version }}
+#          Target Environment: {{ deploy_env }}
+#          Rollback Enabled: {{ rollback_enabled }}
+#          Slack Notifications: {{ notify_slack }}
+#
+#          Example deployment command:
+#          ansible-playbook 06-extra-vars.yml \
+#            -e "deploy_version=2.5.0" \
+#            -e "deploy_env=staging" \
+#            -e "notify_slack=false"
+#
+#    - name: Simulate deployment step
+#      ansible.builtin.debug:
+#        msg: "Deploying version {{ deploy_version }} to {{ deploy_env }}..."
+#
+#
+## Third play: Loading extra vars from a file
+#- name: Demonstrate loading extra vars from file
+#  hosts: all
+#  gather_facts: false
+#
+#  tasks:
+#    - name: Instructions for loading vars from file
+#      ansible.builtin.debug:
+#        msg: |
+#          You can load extra vars from a file using:
+#
+#          ansible-playbook 06-extra-vars.yml -e "@vars/common.yml"
+#
+#          Or combine file and inline vars:
+#          ansible-playbook 06-extra-vars.yml -e "@vars/common.yml" -e "app_version=3.0"
+#
+#          The @ symbol tells Ansible to load vars from the file.
+#      run_once: true

@@ -19,7 +19,7 @@
 <p align="center">
   <img src="https://img.shields.io/badge/Ansible-2.15+-red?style=for-the-badge&logo=ansible" alt="Ansible"/>
   <img src="https://img.shields.io/badge/Level-Beginner%20to%20Expert-blue?style=for-the-badge" alt="Level"/>
-  <img src="https://img.shields.io/badge/Chapters-24-green?style=for-the-badge" alt="Chapters"/>
+  <img src="https://img.shields.io/badge/Chapters-23-green?style=for-the-badge" alt="Chapters"/>
 </p>
 
 ---
@@ -52,49 +52,48 @@ Welcome to the **Ansible Zero to Expert Masterclass**! This comprehensive course
 
 ## 📚 Chapters
 
-### 🟢 Foundation (Chapters 1-5)
+### 🟢 Foundation (Chapters 1-4)
 
 | # | Chapter | Description | Status |
 |---|---------|-------------|--------|
 | 01 | [Hello Ansible](./chapter-01-hello-ansible/) | Your first playbook, ad-hoc commands, ping, debug | ✅ Ready |
 | 02 | [Inventory Deep Dive](./chapter-02-inventory-deep-dive/) | Static inventory, groups, host patterns | ✅ Ready |
-| 03 | Variables | vars, vars_files, host_vars, group_vars | 📝 Coming Soon |
-| 04 | Facts & Magic Variables | gather_facts, ansible_facts, set_fact | 📝 Coming Soon |
-| 05 | Conditionals | when, failed_when, changed_when | 📝 Coming Soon |
+| 03 | [Variables](./chapter-03-variables/) | vars, vars_files, host_vars, group_vars, facts, magic variables | ✅ Ready |
+| 04 | [Conditionals](./chapter-04-conditionals/) | when, failed_when, changed_when, multiple conditions | ✅ Ready |
 
-### 🟡 Intermediate (Chapters 6-12)
-
-| # | Chapter | Description | Status |
-|---|---------|-------------|--------|
-| 06 | Loops | loop, with_items, with_dict, loop_control | 📝 Coming Soon |
-| 07 | Handlers | handlers, notify, listen, flush_handlers | 📝 Coming Soon |
-| 08 | Tags | tags, always, never, --tags, --skip-tags | 📝 Coming Soon |
-| 09 | Register & Debug | register, debug, assert, fail | 📝 Coming Soon |
-| 10 | Templates | Jinja2 templates, filters, template module | 📝 Coming Soon |
-| 11 | File Management | copy, file, lineinfile, blockinfile | 📝 Coming Soon |
-| 12 | Package Management | apt, yum, package, pip | 📝 Coming Soon |
-
-### 🟠 Advanced (Chapters 13-18)
+### 🟡 Intermediate (Chapters 5-11)
 
 | # | Chapter | Description | Status |
 |---|---------|-------------|--------|
-| 13 | Service Management | service, systemd, restarted, enabled | 📝 Coming Soon |
-| 14 | User & Group Management | user, group, authorized_key | 📝 Coming Soon |
-| 15 | Blocks & Error Handling | block, rescue, always, ignore_errors | 📝 Coming Soon |
-| 16 | Roles | Role structure, defaults, tasks, handlers | 📝 Coming Soon |
-| 17 | Ansible Galaxy | Install roles, collections, requirements.yml | 📝 Coming Soon |
-| 18 | Vault | Encryption, vault password, encrypt_string | 📝 Coming Soon |
+| 05 | Loops | loop, with_items, with_dict, loop_control | 📝 Coming Soon |
+| 06 | Handlers | handlers, notify, listen, flush_handlers | 📝 Coming Soon |
+| 07 | Tags | tags, always, never, --tags, --skip-tags | 📝 Coming Soon |
+| 08 | Register & Debug | register, debug, assert, fail | 📝 Coming Soon |
+| 09 | Templates | Jinja2 templates, filters, template module | 📝 Coming Soon |
+| 10 | File Management | copy, file, lineinfile, blockinfile | 📝 Coming Soon |
+| 11 | Package Management | apt, yum, package, pip | 📝 Coming Soon |
 
-### 🔴 Expert (Chapters 19-24)
+### 🟠 Advanced (Chapters 12-17)
 
 | # | Chapter | Description | Status |
 |---|---------|-------------|--------|
-| 19 | Dynamic Inventory | Scripts, plugins, cloud providers | 📝 Coming Soon |
-| 20 | Lookups & Filters | lookup plugins, custom filters | 📝 Coming Soon |
-| 21 | Custom Modules | Writing Python modules | 📝 Coming Soon |
-| 22 | Ansible Tower/AWX | Web UI, job templates, credentials | 📝 Coming Soon |
-| 23 | Best Practices | Directory layout, naming, idempotency | 📝 Coming Soon |
-| 24 | Real-World Project | Deploy nginx with SSL, monitoring stack | 📝 Coming Soon |
+| 12 | Service Management | service, systemd, restarted, enabled | 📝 Coming Soon |
+| 13 | User & Group Management | user, group, authorized_key | 📝 Coming Soon |
+| 14 | Blocks & Error Handling | block, rescue, always, ignore_errors | 📝 Coming Soon |
+| 15 | Roles | Role structure, defaults, tasks, handlers | 📝 Coming Soon |
+| 16 | Ansible Galaxy | Install roles, collections, requirements.yml | 📝 Coming Soon |
+| 17 | Vault | Encryption, vault password, encrypt_string | 📝 Coming Soon |
+
+### 🔴 Expert (Chapters 18-23)
+
+| # | Chapter | Description | Status |
+|---|---------|-------------|--------|
+| 18 | Dynamic Inventory | Scripts, plugins, cloud providers | 📝 Coming Soon |
+| 19 | Lookups & Filters | lookup plugins, custom filters | 📝 Coming Soon |
+| 20 | Custom Modules | Writing Python modules | 📝 Coming Soon |
+| 21 | Ansible Tower/AWX | Web UI, job templates, credentials | 📝 Coming Soon |
+| 22 | Best Practices | Directory layout, naming, idempotency | 📝 Coming Soon |
+| 23 | Real-World Project | Deploy nginx with SSL, monitoring stack | 📝 Coming Soon |
 
 ---
 
@@ -222,8 +221,25 @@ ansible-zero-to-expert-masterclass/
 │   ├── ... (10 playbooks)
 │   └── README.md
 │
-├── 📁 chapter-03-variables/        # Coming soon...
-│   ...
+├── 📁 chapter-03-variables/            # Variables mastery
+│   ├── ansible.cfg
+│   ├── inventory/
+│   ├── group_vars/
+│   │   ├── all.yml
+│   │   ├── webservers.yml
+│   │   └── dbservers.yml
+│   ├── host_vars/
+│   ├── vars/
+│   ├── 01-vars-inline.yml
+│   ├── ... (10 playbooks)
+│   └── README.md
+│
+├── 📁 chapter-04-conditionals/         # Conditionals
+│   ├── ansible.cfg
+│   ├── inventory/
+│   ├── 01-basic-when.yml
+│   ├── ... (10 playbooks)
+│   └── README.md
 │
 └── 📁 util/                        # Utilities
     └── ansible-lab-servers/        # Terraform for lab VMs

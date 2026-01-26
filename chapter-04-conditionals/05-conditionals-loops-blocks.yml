@@ -1,0 +1,95 @@
+---
+# ==============================================
+# 05 - Conditionals with Loops and Blocks
+# ==============================================
+# Run: ansible-playbook 05-conditionals-loops-blocks.yml
+
+- name: Conditionals in loops
+  hosts: all
+  gather_facts: false
+
+  vars:
+    packages:
+      - name: nginx
+        install: true
+      - name: mysql
+        install: false
+      - name: redis
+        install: true
+
+    services:
+      - name: sshd
+        check: true
+      - name: nginx
+        check: true
+      - name: nonexistent
+        check: false
+
+  tasks:
+    # Filter items in a loop
+    - name: "Loop: Install only enabled packages"
+      debug:
+        msg: "Would install {{ item.name }}"
+      loop: "{{ packages }}"
+      when: item.install
+
+    # Check multiple files with loop + condition
+    - name: Check files
+      stat:
+        path: "{{ item }}"
+      loop:
+        - /etc/hosts
+        - /etc/passwd
+        - /nonexistent
+      register: file_checks
+
+    - name: Show existing files only
+      debug:
+        msg: "{{ item.item }} exists"
+      loop: "{{ file_checks.results }}"
+      when: item.stat.exists
+
+
+- name: Conditionals with blocks
+  hosts: all
+  gather_facts: true
+
+  tasks:
+    # Apply one condition to multiple tasks
+    - name: Webserver configuration
+      when: "'webservers' in group_names"
+      block:
+        - name: Configure nginx
+          debug:
+            msg: "Configuring nginx..."
+
+        - name: Setup SSL
+          debug:
+            msg: "Setting up SSL..."
+
+        - name: Open firewall ports
+          debug:
+            msg: "Opening ports 80, 443..."
+
+    - name: Database configuration
+      when: "'dbservers' in group_names"
+      block:
+        - name: Configure MySQL
+          debug:
+            msg: "Configuring MySQL..."
+
+        - name: Setup backup
+          debug:
+            msg: "Configuring backups..."
+
+    # OS-specific block
+    - name: Debian-specific tasks
+      when: ansible_os_family == "Debian"
+      block:
+        - name: Update apt cache
+          debug:
+            msg: "apt update"
+
+        - name: Install packages
+          debug:
+            msg: "apt install nginx php mysql-client"

@@ -18,7 +18,7 @@
     - name: Display all facts (verbose - uncomment to see all)
       ansible.builtin.debug:
         var: ansible_facts
-      when: false  # Set to true to see all facts
+      when: true  # Set to true to see all facts
 
     - name: Display OS information
       ansible.builtin.debug:
@@ -72,100 +72,101 @@
       when: item.size_total | int > 1000000000
 
 
-# Second play: Using facts in conditionals
-- name: Using facts for conditional tasks
-  hosts: all
-  gather_facts: true
-
-  tasks:
-    - name: Task for Debian-based systems
-      ansible.builtin.debug:
-        msg: "This is a Debian/Ubuntu system - would use apt"
-      when: ansible_os_family == "Debian"
-
-    - name: Task for RedHat-based systems
-      ansible.builtin.debug:
-        msg: "This is a RedHat/CentOS system - would use yum/dnf"
-      when: ansible_os_family == "RedHat"
-
-    - name: Check if system has enough memory
-      ansible.builtin.debug:
-        msg: "System has {{ ansible_memtotal_mb }}MB RAM - sufficient for application"
-      when: ansible_memtotal_mb >= 1024
-
-    - name: Warning for low memory systems
-      ansible.builtin.debug:
-        msg: "WARNING: System only has {{ ansible_memtotal_mb }}MB RAM!"
-      when: ansible_memtotal_mb < 1024
-
-
-# Third play: Custom facts
-- name: Working with custom facts
-  hosts: all
-  gather_facts: true
-
-  tasks:
-    - name: Create custom fact directory
-      ansible.builtin.file:
-        path: /etc/ansible/facts.d
-        state: directory
-        mode: '0755'
-      become: true
-
-    - name: Create a custom fact file
-      ansible.builtin.copy:
-        dest: /etc/ansible/facts.d/custom.fact
-        mode: '0644'
-        content: |
-          [application]
-          name=MyApp
-          version=1.0.0
-          environment=production
-
-          [deployment]
-          last_deploy=2024-01-15
-          deployed_by=ansible
-      become: true
-
-    - name: Re-gather facts to pick up custom facts
-      ansible.builtin.setup:
-        filter: ansible_local
-
-    - name: Display custom facts
-      ansible.builtin.debug:
-        msg: |
-          Custom Facts:
-          App Name: {{ ansible_local.custom.application.name | default('not set') }}
-          App Version: {{ ansible_local.custom.application.version | default('not set') }}
-          Environment: {{ ansible_local.custom.application.environment | default('not set') }}
-      when: ansible_local.custom is defined
-
-
-# Fourth play: Fact caching and filtering
-- name: Demonstrate fact filtering
-  hosts: all
-  gather_facts: false  # We'll gather facts manually with filters
-
-  tasks:
-    - name: Gather only network facts
-      ansible.builtin.setup:
-        gather_subset:
-          - network
-
-    - name: Display gathered network facts
-      ansible.builtin.debug:
-        msg: "Network interface info gathered. Default IP: {{ ansible_default_ipv4.address | default('N/A') }}"
-
-    - name: Gather minimal facts (fastest)
-      ansible.builtin.setup:
-        gather_subset:
-          - '!all'
-          - min
-
-    - name: Gather specific fact using filter
-      ansible.builtin.setup:
-        filter: ansible_hostname
-
-    - name: Display filtered fact
-      ansible.builtin.debug:
-        msg: "Hostname: {{ ansible_hostname }}"
+## Second play: Using facts in conditionals
+#- name: Using facts for conditional tasks
+#  hosts: all
+#  gather_facts: true
+#
+#  tasks:
+#    - name: Task for Debian-based systems
+#      ansible.builtin.debug:
+#        msg: "This is a Debian/Ubuntu system - would use apt"
+#      when: ansible_os_family == "Debian"
+#
+#    - name: Task for RedHat-based systems
+#      ansible.builtin.debug:
+#        msg: "This is a RedHat/CentOS system - would use yum/dnf"
+#      when: ansible_os_family == "RedHat"
+#
+#    - name: Check if system has enough memory
+#      ansible.builtin.debug:
+#        msg: "System has {{ ansible_memtotal_mb }}MB RAM - sufficient for application"
+#      when: ansible_memtotal_mb >= 1024
+#
+#    - name: Warning for low memory systems
+#      ansible.builtin.debug:
+#        msg: "WARNING: System only has {{ ansible_memtotal_mb }}MB RAM!"
+#      when: ansible_memtotal_mb < 1024
+#
+#
+## Third play: Custom facts
+#- name: Working with custom facts
+#  hosts: all
+#  gather_facts: true
+#
+#  tasks:
+#    - name: Create custom fact directory
+#      ansible.builtin.file:
+#        path: /etc/ansible/facts.d
+#        state: directory
+#        mode: '0755'
+#      become: true
+#
+#    - name: Create a custom fact file
+#      ansible.builtin.copy:
+#        dest: /etc/ansible/facts.d/custom.fact
+#        mode: '0644'
+#        content: |
+#          [application]
+#          name=MyApp
+#          version=1.0.0
+#          environment=production
+#
+#          [deployment]
+#          last_deploy=2024-01-15
+#          deployed_by=ansible
+#      become: true
+#
+#    - name: Re-gather facts to pick up custom facts
+#      ansible.builtin.setup:
+#        filter: ansible_local
+#
+#    - name: Display custom facts
+#      ansible.builtin.debug:
+#        msg: |
+#          Custom Facts:
+#          App Name: {{ ansible_local.custom.application.name | default('not set') }}
+#          App Version: {{ ansible_local.custom.application.version | default('not set') }}
+#          Environment: {{ ansible_local.custom.application.environment | default('not set') }}
+#      when: ansible_local.custom is defined
+#
+#
+## Fourth play: Fact caching and filtering
+#- name: Demonstrate fact filtering
+#  hosts: all
+#  gather_facts: false  # We'll gather facts manually with filters
+#
+#  tasks:
+#    - name: Gather only network facts
+#      ansible.builtin.setup:
+#        gather_subset:
+#          - network
+#
+#    - name: Display gathered network facts
+#      ansible.builtin.debug:
+#        msg: "Network interface info gathered. Default IP: {{ ansible_default_ipv4.address | default('N/A') }}"
+#
+#    - name: Gather minimal facts (fastest)
+#      ansible.builtin.setup:
+#        gather_subset:
+#          - '!all'
+#          - min
+#
+#    - name: Gather specific fact using filter
+#      ansible.builtin.setup:
+#        filter: ansible_hostname
+#
+#    - name: Display filtered fact
+#      ansible.builtin.debug:
+#        msg: "Hostname: {{ ansible_hostname }}"
+#

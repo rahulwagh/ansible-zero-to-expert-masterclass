@@ -1,0 +1,58 @@
+---
+# ==============================================
+# 02 - Multiple Conditions (AND / OR)
+# ==============================================
+# Run: ansible-playbook 02-multiple-conditions.yml
+
+- name: Multiple conditions demo
+  hosts: all
+  gather_facts: true
+
+  vars:
+    environment: "production"
+    is_enabled: true
+    app_version: "2.5.0"
+
+  tasks:
+    # AND conditions - using YAML list (all must be true)
+    - name: "AND: Production webserver with enough memory"
+      debug:
+        msg: "Production webserver ready!"
+      when:
+        - environment == "production"
+        - "'webservers' in group_names"
+        - ansible_memtotal_mb >= 512
+
+    # OR conditions - using 'or' keyword
+    - name: "OR: Web or database server"
+      debug:
+        msg: "{{ inventory_hostname }} handles traffic"
+      when: "'webservers' in group_names or 'dbservers' in group_names"
+
+    # OR using 'in' for cleaner syntax
+    - name: "OR: Valid environment"
+      debug:
+        msg: "{{ environment }} is valid"
+      when: environment in ['production', 'staging', 'development']
+
+    # Complex: (A AND B) OR C
+    - name: "Complex: Ubuntu with 1GB+ RAM, OR any CentOS"
+      debug:
+        msg: "Supported configuration"
+      when: >
+        (ansible_distribution == "Ubuntu" and ansible_memtotal_mb >= 1024)
+        or ansible_distribution == "CentOS"
+
+    # Version comparison
+    - name: "Version check: 2.0 to 3.0"
+      debug:
+        msg: "App version {{ app_version }} is supported"
+      when:
+        - app_version is version('2.0.0', '>=')
+        - app_version is version('3.0.0', '<')
+
+    # NOT condition
+    - name: "NOT: Skip development"
+      debug:
+        msg: "Not in development mode"
+      when: environment != "development"

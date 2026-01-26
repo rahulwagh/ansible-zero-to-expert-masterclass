@@ -1,0 +1,76 @@
+---
+# ==============================================
+# 01 - When Basics (Variables, Facts, Comparisons)
+# ==============================================
+# Run: ansible-playbook 01-when-basics.yml
+# Run: ansible-playbook 01-when-basics.yml -e "deploy_env=staging"
+
+- name: Basic when conditionals
+  hosts: all
+  gather_facts: true
+
+  vars:
+    deploy_env: "production"
+    debug_mode: false
+    allowed_envs:
+      - production
+      - staging
+      - development
+
+  tasks:
+    # Boolean check
+    - name: Task runs when true
+      debug:
+        msg: "Debug mode is OFF"
+      when: not debug_mode
+
+    # String comparison
+    - name: Check environment
+      debug:
+        msg: "Running in {{ deploy_env }} environment"
+      when: deploy_env == "production"
+
+    # Check if value is in list
+    - name: Validate environment
+      debug:
+        msg: "{{ deploy_env }} is a valid environment"
+      when: deploy_env in allowed_envs
+
+    # Using facts - OS check
+    - name: Debian-based system
+      debug:
+        msg: "This is {{ ansible_distribution }} - use apt"
+      when: ansible_os_family == "Debian"
+
+    - name: RedHat-based system
+      debug:
+        msg: "This is {{ ansible_distribution }} - use yum"
+      when: ansible_os_family == "RedHat"
+
+    # Numeric comparison with facts
+    - name: Check memory
+      debug:
+        msg: "Memory: {{ ansible_memtotal_mb }}MB - {{ 'Sufficient' if ansible_memtotal_mb >= 1024 else 'Low' }}"
+      when: ansible_memtotal_mb >= 512
+
+    # Group membership check
+    - name: Webserver tasks
+      debug:
+        msg: "{{ inventory_hostname }} is a webserver"
+      when: "'webservers' in group_names"
+
+    - name: Database tasks
+      debug:
+        msg: "{{ inventory_hostname }} is a database server"
+      when: "'dbservers' in group_names"
+
+    # is defined / is not defined
+    - name: Check if variable exists
+      debug:
+        msg: "deploy_env is defined: {{ deploy_env }}"
+      when: deploy_env is defined
+
+    - name: Handle undefined variable
+      debug:
+        msg: "undefined_var is not set, using default"
+      when: undefined_var is not defined
