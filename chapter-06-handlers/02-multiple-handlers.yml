@@ -1,0 +1,88 @@
+---
+# ==============================================
+# 02 - Multiple Handlers
+# ==============================================
+# Run: ansible-playbook 02-multiple-handlers.yml
+
+- name: Multiple handlers demo
+  hosts: all
+  gather_facts: false
+
+  tasks:
+    # Notify multiple handlers from one task
+    - name: Deploy new application version
+      debug:
+        msg: "Deploying application v2.0..."
+      notify:
+        - Stop application
+        - Clear cache
+        - Start application
+      changed_when: true
+
+  handlers:
+    # Handlers run in the ORDER THEY ARE DEFINED (not notify order!)
+    - name: Stop application
+      debug:
+        msg: "Handler 1: Stopping application..."
+
+    - name: Clear cache
+      debug:
+        msg: "Handler 2: Clearing cache..."
+
+    - name: Start application
+      debug:
+        msg: "Handler 3: Starting application..."
+
+
+- name: Handler execution order
+  hosts: all
+  gather_facts: false
+
+  tasks:
+    - name: Task 1 - notifies handler B
+      debug:
+        msg: "Task 1 notifying handler B"
+      notify: Handler B
+      changed_when: true
+
+    - name: Task 2 - notifies handler A
+      debug:
+        msg: "Task 2 notifying handler A"
+      notify: Handler A
+      changed_when: true
+
+    - name: Note about order
+      debug:
+        msg: "Even though B was notified first, A runs first (definition order)"
+
+  handlers:
+    # A is defined first, so it runs first
+    - name: Handler A
+      debug:
+        msg: "Handler A runs FIRST (defined first)"
+
+    - name: Handler B
+      debug:
+        msg: "Handler B runs SECOND (defined second)"
+
+
+- name: Handler calling another handler
+  hosts: all
+  gather_facts: false
+
+  tasks:
+    - name: Update SSL certificate
+      debug:
+        msg: "Updating SSL certificate..."
+      notify: Reload nginx config
+      changed_when: true
+
+  handlers:
+    - name: Reload nginx config
+      debug:
+        msg: "Handler: Reloading nginx configuration..."
+      notify: Verify nginx status
+
+    - name: Verify nginx status
+      debug:
+        msg: "Handler: Verifying nginx is running correctly..."

@@ -1,0 +1,122 @@
+---
+# ==============================================
+# 03 - Listen Handlers
+# ==============================================
+# Run: ansible-playbook 03-listen-handlers.yml
+
+- name: Listen directive - group handlers
+  hosts: all
+  gather_facts: false
+
+  tasks:
+    # One notify triggers MULTIPLE handlers using listen
+    - name: Deploy web application
+      debug:
+        msg: "Deploying web application..."
+      notify: restart web stack
+      changed_when: true
+
+  handlers:
+    # Multiple handlers listen to the same event
+    - name: Restart nginx
+      debug:
+        msg: "Handler: Restarting nginx..."
+      listen: restart web stack
+
+    - name: Restart php-fpm
+      debug:
+        msg: "Handler: Restarting php-fpm..."
+      listen: restart web stack
+
+    - name: Clear opcache
+      debug:
+        msg: "Handler: Clearing PHP opcache..."
+      listen: restart web stack
+
+
+- name: Listen vs notify comparison
+  hosts: all
+  gather_facts: false
+
+  tasks:
+    # Method 1: Multiple notifies (verbose)
+    - name: "Method 1: Update config (multiple notify)"
+      debug:
+        msg: "Updating configuration..."
+      notify:
+        - Restart service A
+        - Restart service B
+        - Restart service C
+      changed_when: true
+
+    # Method 2: Single notify with listen (clean)
+    - name: "Method 2: Update config (single notify + listen)"
+      debug:
+        msg: "Updating configuration..."
+      notify: restart all services
+      changed_when: true
+
+  handlers:
+    # Method 1 handlers
+    - name: Restart service A
+      debug:
+        msg: "Restarting A..."
+
+    - name: Restart service B
+      debug:
+        msg: "Restarting B..."
+
+    - name: Restart service C
+      debug:
+        msg: "Restarting C..."
+
+    # Method 2 handlers (all listen to same event)
+    - name: Restart service X
+      debug:
+        msg: "Restarting X..."
+      listen: restart all services
+
+    - name: Restart service Y
+      debug:
+        msg: "Restarting Y..."
+      listen: restart all services
+
+    - name: Restart service Z
+      debug:
+        msg: "Restarting Z..."
+      listen: restart all services
+
+
+- name: Real-world listen example
+  hosts: all
+  gather_facts: false
+
+  tasks:
+    - name: Update nginx configuration
+      debug:
+        msg: "Updating /etc/nginx/nginx.conf..."
+      notify: nginx changed
+      changed_when: true
+
+    - name: Update SSL certificates
+      debug:
+        msg: "Updating SSL certificates..."
+      notify: nginx changed
+      changed_when: true
+
+  handlers:
+    # All these run when nginx config changes
+    - name: Validate nginx config
+      debug:
+        msg: "Running: nginx -t"
+      listen: nginx changed
+
+    - name: Reload nginx
+      debug:
+        msg: "Running: systemctl reload nginx"
+      listen: nginx changed
+
+    - name: Verify nginx status
+      debug:
+        msg: "Running: systemctl status nginx"
+      listen: nginx changed

@@ -1,0 +1,118 @@
+---
+# ==============================================
+# 04 - Flush Handlers
+# ==============================================
+# Run: ansible-playbook 04-flush-handlers.yml
+
+- name: Default behavior - handlers at end
+  hosts: all
+  gather_facts: false
+
+  tasks:
+    - name: "Step 1: Update config"
+      debug:
+        msg: "Updating configuration..."
+      notify: Restart service
+      changed_when: true
+
+    - name: "Step 2: This runs before handler"
+      debug:
+        msg: "Handler hasn't run yet..."
+
+    - name: "Step 3: Another task"
+      debug:
+        msg: "Still waiting for handler..."
+
+    # Handlers run HERE at end of play
+
+  handlers:
+    - name: Restart service
+      debug:
+        msg: "Handler: Service restarted at END of play"
+
+
+- name: Flush handlers - run immediately
+  hosts: all
+  gather_facts: false
+
+  tasks:
+    - name: "Step 1: Update config"
+      debug:
+        msg: "Updating configuration..."
+      notify: Restart service
+      changed_when: true
+
+    # Force handlers to run NOW
+    - name: Flush handlers
+      meta: flush_handlers
+
+    - name: "Step 2: Service is now running"
+      debug:
+        msg: "Handler already ran! Service is up."
+
+    - name: "Step 3: Continue with dependent tasks"
+      debug:
+        msg: "Safe to proceed - service is ready"
+
+  handlers:
+    - name: Restart service
+      debug:
+        msg: "Handler: Service restarted IMMEDIATELY"
+
+
+- name: Flush handlers - practical example
+  hosts: all
+  gather_facts: false
+
+  tasks:
+    - name: Install nginx package
+      debug:
+        msg: "Installing nginx..."
+      notify: Start nginx
+      changed_when: true
+
+    - name: Configure nginx
+      debug:
+        msg: "Configuring nginx..."
+      notify: Reload nginx
+      changed_when: true
+
+    # Flush to ensure nginx is running before health check
+    - name: Ensure nginx is running before checks
+      meta: flush_handlers
+
+    - name: Health check - verify nginx responds
+      debug:
+        msg: "Checking http://localhost:80 ... OK!"
+
+    - name: Register with load balancer
+      debug:
+        msg: "Registering server with load balancer..."
+
+  handlers:
+    - name: Start nginx
+      debug:
+        msg: "Handler: Starting nginx service..."
+
+    - name: Reload nginx
+      debug:
+        msg: "Handler: Reloading nginx..."
+
+
+- name: Handler with conditions
+  hosts: all
+  gather_facts: true
+
+  tasks:
+    - name: Update web config
+      debug:
+        msg: "Updating web configuration..."
+      notify: Restart web service
+      changed_when: true
+
+  handlers:
+    # Handler only runs on Debian systems
+    - name: Restart web service
+      debug:
+        msg: "Restarting web service on {{ ansible_os_family }}..."
+      when: ansible_os_family == "Debian"
