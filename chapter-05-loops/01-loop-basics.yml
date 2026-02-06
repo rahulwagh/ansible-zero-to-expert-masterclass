@@ -61,25 +61,3 @@
       when: item.groups == "developers"
 
 
-- name: Legacy with_items (still works)
-  hosts: all
-  gather_facts: false
-
-  tasks:
-    # with_items - older syntax, same result
-    - name: "with_items: Simple list"
-      debug:
-        msg: "Item: {{ item }}"
-      with_items:
-        - apple
-        - banana
-        - cherry
-
-    # Inline list with loop
-    - name: "loop: Inline list"
-      debug:
-        msg: "Fruit: {{ item }}"
-      loop:
-        - apple
-        - banana
-        - cherry

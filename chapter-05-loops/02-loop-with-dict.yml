@@ -56,7 +56,7 @@
         msg: "Port: {{ item }}"
       loop: "{{ app_ports.values() | list }}"
 
-
+#not covered
 - name: Complex data structures
   hosts: all
   gather_facts: false

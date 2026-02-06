@@ -71,7 +71,7 @@
         - task3
       loop_control:
         pause: 1
-
+#not covered
     # Combine multiple loop_control options
     - name: "Combined: label + index_var + extended"
       debug:

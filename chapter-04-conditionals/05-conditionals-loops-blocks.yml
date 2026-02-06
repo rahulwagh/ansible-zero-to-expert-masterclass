@@ -33,22 +33,6 @@
       loop: "{{ packages }}"
       when: item.install
 
-    # Check multiple files with loop + condition
-    - name: Check files
-      stat:
-        path: "{{ item }}"
-      loop:
-        - /etc/hosts
-        - /etc/passwd
-        - /nonexistent
-      register: file_checks
-
-    - name: Show existing files only
-      debug:
-        msg: "{{ item.item }} exists"
-      loop: "{{ file_checks.results }}"
-      when: item.stat.exists
-
 
 - name: Conditionals with blocks
   hosts: all
@@ -82,14 +66,3 @@
           debug:
             msg: "Configuring backups..."
 
-    # OS-specific block
-    - name: Debian-specific tasks
-      when: ansible_os_family == "Debian"
-      block:
-        - name: Update apt cache
-          debug:
-            msg: "apt update"
-
-        - name: Install packages
-          debug:
-            msg: "apt install nginx php mysql-client"

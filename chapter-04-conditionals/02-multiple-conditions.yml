@@ -9,7 +9,7 @@
   gather_facts: true
 
   vars:
-    environment: "production"
+    app_env: "production"
     is_enabled: true
     app_version: "2.5.0"
 
@@ -19,7 +19,7 @@
       debug:
         msg: "Production webserver ready!"
       when:
-        - environment == "production"
+        - app_env == "production"
         - "'webservers' in group_names"
         - ansible_memtotal_mb >= 512
 
@@ -30,17 +30,17 @@
       when: "'webservers' in group_names or 'dbservers' in group_names"
 
     # OR using 'in' for cleaner syntax
-    - name: "OR: Valid environment"
+    - name: "OR: Valid app_env"
       debug:
-        msg: "{{ environment }} is valid"
-      when: environment in ['production', 'staging', 'development']
+        msg: "{{ app_env }} is valid"
+      when: app_env in ['production', 'staging', 'development']
 
     # Complex: (A AND B) OR C
     - name: "Complex: Ubuntu with 1GB+ RAM, OR any CentOS"
       debug:
         msg: "Supported configuration"
       when: >
-        (ansible_distribution == "Ubuntu" and ansible_memtotal_mb >= 1024)
+        (ansible_distribution == "Ubuntu" and ansible_memtotal_mb >= 900)
         or ansible_distribution == "CentOS"
 
     # Version comparison
@@ -48,11 +48,11 @@
       debug:
         msg: "App version {{ app_version }} is supported"
       when:
-        - app_version is version('2.0.0', '>=')
+        - app_version is version('2.0.0', '>=') #2.5.0
         - app_version is version('3.0.0', '<')
 
     # NOT condition
     - name: "NOT: Skip development"
       debug:
         msg: "Not in development mode"
-      when: environment != "development"
+      when: app_env != "development"
