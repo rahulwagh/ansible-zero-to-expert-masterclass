@@ -67,7 +67,7 @@ Welcome to the **Ansible Zero to Expert Masterclass**! This comprehensive course
 |---|---------|-------------|--------|
 | 05 | [Loops](./chapter-05-loops/) | loop, with_items, with_dict, loop_control | ✅ Ready |
 | 06 | [Handlers](./chapter-06-handlers/) | handlers, notify, listen, flush_handlers | ✅ Ready |
-| 07 | Tags | tags, always, never, --tags, --skip-tags | 📝 Coming Soon |
+| 07 | [Tags](./chapter-07-tags/) | tags, always, never, --tags, --skip-tags | ✅ Ready |
 | 08 | Register & Debug | register, debug, assert, fail | 📝 Coming Soon |
 | 09 | Templates | Jinja2 templates, filters, template module | 📝 Coming Soon |
 | 10 | File Management | copy, file, lineinfile, blockinfile | 📝 Coming Soon |
@@ -252,6 +252,13 @@ ansible-zero-to-expert-masterclass/
 │   ├── ansible.cfg
 │   ├── inventory/
 │   ├── 01-handler-basics.yml
+│   ├── ... (4 playbooks)
+│   └── README.md
+│
+├── 📁 chapter-07-tags/                 # Tags
+│   ├── ansible.cfg
+│   ├── inventory/
+│   ├── 01-tag-basics.yml
 │   ├── ... (4 playbooks)
 │   └── README.md
 │
