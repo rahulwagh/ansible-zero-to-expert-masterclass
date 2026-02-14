@@ -4,34 +4,34 @@
 # ==============================================
 # Run: ansible-playbook 02-multiple-handlers.yml
 
-- name: Multiple handlers demo
-  hosts: all
-  gather_facts: false
-
-  tasks:
-    # Notify multiple handlers from one task
-    - name: Deploy new application version
-      debug:
-        msg: "Deploying application v2.0..."
-      notify:
-        - Stop application
-        - Clear cache
-        - Start application
-      changed_when: true
-
-  handlers:
-    # Handlers run in the ORDER THEY ARE DEFINED (not notify order!)
-    - name: Stop application
-      debug:
-        msg: "Handler 1: Stopping application..."
-
-    - name: Clear cache
-      debug:
-        msg: "Handler 2: Clearing cache..."
-
-    - name: Start application
-      debug:
-        msg: "Handler 3: Starting application..."
+#- name: Multiple handlers demo
+#  hosts: all
+#  gather_facts: false
+#
+#  tasks:
+#    # Notify multiple handlers from one task
+#    - name: Deploy new application version
+#      debug:
+#        msg: "Deploying application v2.0..."
+#      notify:
+#        - Stop application
+#        - Clear cache
+#        - Start application
+#      changed_when: true
+#
+#  handlers:
+#    # Handlers run in the ORDER THEY ARE DEFINED (not notify order!)
+#    - name: Stop application
+#      debug:
+#        msg: "Handler 1: Stopping application..."
+#
+#    - name: Clear cache
+#      debug:
+#        msg: "Handler 2: Clearing cache..."
+#
+#    - name: Start application
+#      debug:
+#        msg: "Handler 3: Starting application..."
 
 
 - name: Handler execution order

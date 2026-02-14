@@ -1,86 +1,81 @@
 ---
-# ==============================================
-# 01 - Handler Basics
-# ==============================================
-# Run: ansible-playbook 01-handler-basics.yml
+ ==============================================
+ 01 - Handler Basics
+ ==============================================
+ Run: ansible-playbook 01-handler-basics.yml
 
-- name: Understanding handlers
+- name: "Example 1: Config file change triggers service restart"
   hosts: all
   gather_facts: false
 
   vars:
-    config_changed: true
+    app_port: 8080
+    app_name: "myapp"
 
   tasks:
-    # Basic handler - triggered by notify
-    - name: Update application config
-      debug:
-        msg: "Updating application configuration..."
+    # Create application config file
+    - name: Create application config
+      copy:
+        dest: /tmp/{{ app_name }}.conf
+        content: |
+          # Application Configuration
+          APP_NAME={{ app_name }}
+          APP_PORT={{ app_port }}
+          ENVIRONMENT=production
+          DEBUG=false
       notify: Restart application
-      changed_when: config_changed
 
-    - name: Show task order
+    # This task runs BEFORE handler (handlers run at end)
+    - name: Verify config was created
+      command: cat /tmp/{{ app_name }}.conf
+      register: config_content
+      changed_when: false
+
+    - name: Show config content
       debug:
-        msg: "This runs BEFORE the handler (handlers run at end)"
+        msg: "{{ config_content.stdout_lines }}"
 
   handlers:
     - name: Restart application
+      command: echo "Service {{ app_name }} restarted at $(date)"
+      register: restart_output
+
+    - name: Show restart confirmation
       debug:
-        msg: "Handler: Restarting application service..."
+        msg: "{{ restart_output.stdout }}"
 
 
-- name: Handler only runs when task changes
+- name: "Example 2: Handler only runs when task changes"
   hosts: all
   gather_facts: false
 
-  tasks:
-    # This task reports "ok" (not changed) - handler NOT triggered
-    - name: Check config (no change)
-      debug:
-        msg: "Checking config - no changes needed"
-      notify: Restart service
-      # changed_when defaults to false for debug module
-
-    - name: Show handler status
-      debug:
-        msg: "Handler was NOT triggered because task didn't change anything"
-
-  handlers:
-    - name: Restart service
-      debug:
-        msg: "This will NOT run - task didn't report changed"
-
-
-- name: Handler runs only once
-  hosts: all
-  gather_facts: false
+  # Run this playbook TWICE to see the difference:
+  #   1st run: File created = changed = handler RUNS
+  #   2nd run: File exists  = ok      = handler SKIPPED
 
   tasks:
-    # Multiple tasks notify the SAME handler
-    - name: Update config file 1
-      debug:
-        msg: "Updating config file 1..."
-      notify: Restart nginx
-      changed_when: true
+    # Using 'copy' - only reports changed when content differs
+    - name: Create marker file (only triggers handler on first run)
+      copy:
+        dest: /tmp/handler_demo_marker_file
+        content: "This file was created by Ansible handler demo"
+      notify: Show handler triggered message
 
-    - name: Update config file 2
-      debug:
-        msg: "Updating config file 2..."
-      notify: Restart nginx
-      changed_when: true
+    - name: Check if marker exists
+      stat:
+        path: /tmp/handler_demo_marker_file
+      register: marker_stat
 
-    - name: Update config file 3
+    - name: Show marker status
       debug:
-        msg: "Updating config file 3..."
-      notify: Restart nginx
-      changed_when: true
-
-    - name: Note about handler
-      debug:
-        msg: "3 tasks notified, but handler runs only ONCE!"
+        msg: "Marker file exists: {{ marker_stat.stat.exists }}, size: {{ marker_stat.stat.size }} bytes"
 
   handlers:
-    # Handler runs only ONCE even if notified multiple times
-    - name: Restart nginx
+    - name: Show handler triggered message
       debug:
-        msg: "Handler: Nginx restarted (runs only once!)"
+        msg: |
+          ============================================
+          HANDLER TRIGGERED! This only runs when the
+          task reports 'changed'. Run the playbook
+          again - this message will NOT appear!
+          ============================================
