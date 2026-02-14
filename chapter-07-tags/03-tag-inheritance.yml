@@ -1,0 +1,88 @@
+---
+# ==============================================
+# 03 - Tag Inheritance (play, role, block, include)
+# ==============================================
+# Run: ansible-playbook 03-tag-inheritance.yml --tags "setup"
+
+- name: "Example 1: Play-level tags"
+  hosts: webservers
+  become: true
+  gather_facts: false
+  # All tasks in this play inherit the 'websetup' tag
+  tags: websetup
+
+  tasks:
+    - name: Install nginx
+      apt:
+        name: nginx
+        state: present
+
+    - name: Install certbot
+      apt:
+        name: certbot
+        state: present
+
+    - name: Start nginx
+      service:
+        name: nginx
+        state: started
+
+
+- name: "Example 2: Block-level tags"
+  hosts: all
+  become: true
+  gather_facts: false
+
+  tasks:
+    # All tasks inside this block inherit the 'setup' tag
+    - name: Base system setup
+      tags: setup
+      block:
+        - name: Update apt cache
+          apt:
+            update_cache: true
+            cache_valid_time: 3600
+
+        - name: Install base packages
+          apt:
+            name:
+              - curl
+              - wget
+              - vim
+              - htop
+              - unzip
+            state: present
+
+        - name: Set timezone
+          timezone:
+            name: UTC
+
+    # Separate block for security hardening
+    - name: Security hardening
+      tags: security
+      block:
+        - name: Disable root SSH login
+          lineinfile:
+            path: /etc/ssh/sshd_config
+            regexp: "^PermitRootLogin"
+            line: "PermitRootLogin no"
+          notify: Restart sshd
+
+        - name: Set SSH idle timeout
+          lineinfile:
+            path: /etc/ssh/sshd_config
+            regexp: "^ClientAliveInterval"
+            line: "ClientAliveInterval 300"
+          notify: Restart sshd
+
+    # Untagged task - runs only when no --tags filter is used
+    - name: Log provisioning complete
+      copy:
+        dest: /var/log/provisioned.log
+        content: "Provisioned at {{ ansible_date_time.iso8601 | default('unknown') }}\n"
+
+  handlers:
+    - name: Restart sshd
+      service:
+        name: sshd
+        state: restarted

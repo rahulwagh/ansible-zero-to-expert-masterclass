@@ -1,0 +1,87 @@
+---
+# ==============================================
+# 01 - Tag Basics
+# ==============================================
+# Run all tasks:    ansible-playbook 01-tag-basics.yml
+# Run tagged tasks: ansible-playbook 01-tag-basics.yml --tags "install"
+# Skip tagged:      ansible-playbook 01-tag-basics.yml --skip-tags "config"
+# List all tags:    ansible-playbook 01-tag-basics.yml --list-tags
+
+- name: "Example 1: Web server setup with tags"
+  hosts: webservers
+  become: true
+  gather_facts: false
+
+  vars:
+    app_name: "myapp"
+    app_port: 8080
+
+  tasks:
+    # Tag individual tasks to control what runs
+    - name: Install nginx
+      apt:
+        name: nginx
+        state: present
+        update_cache: true
+      tags: install
+
+    - name: Copy nginx config
+      copy:
+        dest: /etc/nginx/sites-available/{{ app_name }}
+        content: |
+          server {
+              listen 80;
+              server_name _;
+              location / {
+                  proxy_pass http://127.0.0.1:{{ app_port }};
+              }
+          }
+      tags: config
+
+    - name: Enable site
+      file:
+        src: /etc/nginx/sites-available/{{ app_name }}
+        dest: /etc/nginx/sites-enabled/{{ app_name }}
+        state: link
+      tags: config
+
+    - name: Start nginx
+      service:
+        name: nginx
+        state: started
+        enabled: true
+      tags: service
+
+
+- name: "Example 2: Multiple tags on a single task"
+  hosts: webservers
+  become: true
+  gather_facts: false
+
+  tasks:
+    # A task can have multiple tags
+    - name: Install monitoring agent
+      apt:
+        name: prometheus-node-exporter
+        state: present
+      tags:
+        - install
+        - monitoring
+
+    - name: Configure monitoring agent
+      copy:
+        dest: /etc/default/prometheus-node-exporter
+        content: |
+          ARGS="--web.listen-address=:9100"
+      tags:
+        - config
+        - monitoring
+
+    - name: Start monitoring agent
+      service:
+        name: prometheus-node-exporter
+        state: started
+        enabled: true
+      tags:
+        - service
+        - monitoring

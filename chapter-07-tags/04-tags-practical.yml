@@ -1,0 +1,193 @@
+---
+# ==============================================
+# 04 - Practical Tag Patterns
+# ==============================================
+# Full deployment:        ansible-playbook 04-tags-practical.yml
+# Only install packages:  ansible-playbook 04-tags-practical.yml --tags "install"
+# Only update configs:    ansible-playbook 04-tags-practical.yml --tags "config"
+# Skip firewall rules:    ansible-playbook 04-tags-practical.yml --skip-tags "firewall"
+# Deploy + restart only:  ansible-playbook 04-tags-practical.yml --tags "deploy,service"
+# List available tags:    ansible-playbook 04-tags-practical.yml --list-tags
+
+- name: "Full Stack Deployment with Tags"
+  hosts: webservers
+  become: true
+  gather_facts: true
+
+  vars:
+    app_name: "webapp"
+    app_user: "deploy"
+    deploy_dir: "/opt/{{ app_name }}"
+    app_port: 3000
+    node_version: "18"
+
+  tasks:
+    # ── Install Phase ──
+    - name: Install Node.js repository
+      shell: curl -fsSL https://deb.nodesource.com/setup_{{ node_version }}.x | bash -
+      args:
+        creates: /etc/apt/sources.list.d/nodesource.list
+      tags: install
+
+    - name: Install required packages
+      apt:
+        name:
+          - nginx
+          - nodejs
+          - ufw
+        state: present
+      tags: install
+
+    # ── User & Directory Setup ──
+    - name: Create application user
+      user:
+        name: "{{ app_user }}"
+        system: true
+        shell: /usr/sbin/nologin
+        home: "{{ deploy_dir }}"
+      tags: setup
+
+    - name: Create application directories
+      file:
+        path: "{{ item }}"
+        state: directory
+        owner: "{{ app_user }}"
+        group: "{{ app_user }}"
+      loop:
+        - "{{ deploy_dir }}"
+        - "{{ deploy_dir }}/current"
+        - "{{ deploy_dir }}/shared/logs"
+      tags: setup
+
+    # ── Configuration Phase ──
+    - name: Configure nginx reverse proxy
+      copy:
+        dest: /etc/nginx/sites-available/{{ app_name }}
+        content: |
+          upstream app_backend {
+              server 127.0.0.1:{{ app_port }};
+          }
+          server {
+              listen 80;
+              server_name _;
+              location / {
+                  proxy_pass http://app_backend;
+                  proxy_set_header Host $host;
+                  proxy_set_header X-Real-IP $remote_addr;
+              }
+          }
+      notify: Reload nginx
+      tags: config
+
+    - name: Enable nginx site
+      file:
+        src: /etc/nginx/sites-available/{{ app_name }}
+        dest: /etc/nginx/sites-enabled/{{ app_name }}
+        state: link
+      notify: Reload nginx
+      tags: config
+
+    - name: Create systemd service for app
+      copy:
+        dest: /etc/systemd/system/{{ app_name }}.service
+        content: |
+          [Unit]
+          Description={{ app_name }}
+          After=network.target
+
+          [Service]
+          User={{ app_user }}
+          WorkingDirectory={{ deploy_dir }}/current
+          ExecStart=/usr/bin/node server.js
+          Restart=on-failure
+          Environment=PORT={{ app_port }}
+          Environment=NODE_ENV=production
+
+          [Install]
+          WantedBy=multi-user.target
+      notify: Restart application
+      tags: config
+
+    # ── Firewall Phase ──
+    - name: Configure firewall rules
+      tags: firewall
+      block:
+        - name: Allow SSH
+          ufw:
+            rule: allow
+            port: "22"
+            proto: tcp
+
+        - name: Allow HTTP
+          ufw:
+            rule: allow
+            port: "80"
+            proto: tcp
+
+        - name: Allow HTTPS
+          ufw:
+            rule: allow
+            port: "443"
+            proto: tcp
+
+        - name: Enable firewall
+          ufw:
+            state: enabled
+            policy: deny
+
+    # ── Deploy Phase ──
+    - name: Deploy application code
+      synchronize:
+        src: /tmp/{{ app_name }}-build/
+        dest: "{{ deploy_dir }}/current/"
+      notify: Restart application
+      tags: deploy
+
+    - name: Install Node.js dependencies
+      command: npm install --production
+      args:
+        chdir: "{{ deploy_dir }}/current"
+      become_user: "{{ app_user }}"
+      tags: deploy
+
+    # ── Service Phase ──
+    - name: Ensure nginx is running
+      service:
+        name: nginx
+        state: started
+        enabled: true
+      tags: service
+
+    - name: Ensure application is running
+      service:
+        name: "{{ app_name }}"
+        state: started
+        enabled: true
+      tags: service
+
+    # ── Health Check (always runs) ──
+    - name: Wait for application to start
+      wait_for:
+        port: "{{ app_port }}"
+        timeout: 30
+      tags: always
+
+    - name: Verify application responds
+      uri:
+        url: "http://localhost:{{ app_port }}/health"
+        status_code: 200
+      register: health
+      ignore_errors: true
+      tags: always
+
+  handlers:
+    - name: Reload nginx
+      service:
+        name: nginx
+        state: reloaded
+
+    - name: Restart application
+      systemd:
+        name: "{{ app_name }}"
+        state: restarted
+        daemon_reload: true
