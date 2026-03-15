@@ -68,8 +68,8 @@ Welcome to the **Ansible Zero to Expert Masterclass**! This comprehensive course
 | 05 | [Loops](./chapter-05-loops/) | loop, with_items, with_dict, loop_control | ✅ Ready |
 | 06 | [Handlers](./chapter-06-handlers/) | handlers, notify, listen, flush_handlers | ✅ Ready |
 | 07 | [Tags](./chapter-07-tags/) | tags, always, never, --tags, --skip-tags | ✅ Ready |
-| 08 | Register & Debug | register, debug, assert, fail | 📝 Coming Soon |
-| 09 | Templates | Jinja2 templates, filters, template module | 📝 Coming Soon |
+| 08 | [Templates](./chapter-08-templates/) | Jinja2 templates, filters, template module | ✅ Ready |
+| 09 | Register & Debug | register, debug, assert, fail | 📝 Coming Soon |
 | 10 | File Management | copy, file, lineinfile, blockinfile | 📝 Coming Soon |
 | 11 | Package Management | apt, yum, package, pip | 📝 Coming Soon |
 
@@ -262,6 +262,21 @@ ansible-zero-to-expert-masterclass/
 │   ├── ... (4 playbooks)
 │   └── README.md
 │
+├── 📁 chapter-08-templates/            # Templates with Jinja2
+│   ├── ansible.cfg
+│   ├── inventory/
+│   ├── templates/
+│   │   ├── nginx.conf.j2
+│   │   ├── app.conf.j2
+│   │   ├── motd.j2
+│   │   ├── index.html.j2
+│   │   └── sudoers_snippet.j2
+│   ├── 01-template-basics.yml
+│   ├── 02-jinja2-filters.yml
+│   ├── 03-template-advanced.yml
+│   ├── 04-templates-practical.yml
+│   └── README.md
+│
 └── 📁 util/                        # Utilities
     └── ansible-lab-servers/        # Terraform for lab VMs
         ├── main.tf
@@ -310,3 +325,4 @@ Contributions are welcome! Feel free to:
 <p align="center">
   Made with ❤️ by Rahul Wagh
 </p>
+

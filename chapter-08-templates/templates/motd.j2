@@ -1,0 +1,25 @@
+##############################################################
+#                     MANAGED BY ANSIBLE                     #
+##############################################################
+
+  Hostname : {{ ansible_hostname }}
+  FQDN     : {{ ansible_fqdn }}
+  OS       : {{ ansible_distribution }} {{ ansible_distribution_version }}
+  Kernel   : {{ ansible_kernel }}
+  Arch     : {{ ansible_architecture }}
+
+  CPU      : {{ ansible_processor_vcpus }} vCPU(s)
+  Memory   : {{ (ansible_memtotal_mb / 1024) | round(1) }} GB total
+  Disk     : {{ ansible_mounts[0].size_total | filesizeformat }}
+
+  IP       : {{ ansible_default_ipv4.address }}
+  Env      : {{ server_env | default('production') | upper }}
+
+{% if server_env | default('production') == 'production' %}
+  *** PRODUCTION SERVER — PROCEED WITH CAUTION ***
+{% else %}
+  *** {{ server_env | upper }} ENVIRONMENT ***
+{% endif %}
+
+  Ansible managed — do not edit manually.
+##############################################################

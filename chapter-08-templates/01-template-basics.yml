@@ -1,0 +1,85 @@
+---
+# ==============================================
+# 01 - Template Basics
+# ==============================================
+# Run: ansible-playbook 01-template-basics.yml
+#
+# The `template` module renders a Jinja2 .j2 file on the
+# control node and uploads the result to the managed host.
+# Variables available in playbook scope are automatically
+# accessible inside the template.
+
+#- name: "Example 1: Deploy a simple MOTD using a template"
+#  hosts: webservers
+#  become: true
+#  gather_facts: true          # facts are used inside motd.j2
+#
+#  vars:
+#    server_env: "staging"
+#
+#  tasks:
+#    - name: Deploy MOTD template
+#      template:
+#        src: templates/motd.j2
+#        dest: /etc/motd
+#        owner: root
+#        group: root
+#        mode: '0644'
+#
+#    - name: Verify MOTD was written
+#      command: cat /etc/motd
+#      register: motd_content
+#      changed_when: false
+#
+#    - name: Show MOTD content
+#      debug:
+#        var: motd_content.stdout
+
+
+- name: "Example 2: Deploy nginx config from template"
+  hosts: webservers
+  become: true
+  gather_facts: true
+
+  vars:
+    nginx_worker_processes: 2
+    nginx_worker_connections: 2048
+    nginx_keepalive_timeout: 75
+    nginx_gzip_enabled: true
+    nginx_vhosts:
+      - server_name: "example.com"
+        port: 80
+        root: "/var/www/example"
+      - server_name: "api.example.com"
+        port: 80
+        root: "/var/www/api"
+        proxy_pass: "http://127.0.0.1:3000"
+
+  tasks:
+    - name: Install nginx
+      apt:
+        name: nginx
+        state: present
+        update_cache: true
+
+    - name: Deploy nginx configuration
+      template:
+        src: templates/nginx.conf.j2
+        dest: /etc/nginx/nginx.conf
+        owner: root
+        group: root
+        mode: '0644'
+        validate: '/usr/sbin/nginx -t -c %s'   # validate before applying
+      notify: Reload nginx
+
+    - name: Ensure nginx is running
+      service:
+        name: nginx
+        state: started
+        enabled: true
+
+  handlers:
+    - name: Reload nginx
+      service:
+        name: nginx
+        state: reloaded

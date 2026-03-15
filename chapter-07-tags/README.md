@@ -55,6 +55,19 @@ ansible-playbook 01-tag-basics.yml --skip-tags "config"
 ansible-playbook 01-tag-basics.yml --list-tags
 ```
 
+### Check the Status of Nginx
+```bash
+sudo systemctl status nginx
+```
+
+### Check the Status of Prometheous prometheus-node-exporter
+
+```bash
+systemctl list-unit-files | grep node-exporter
+
+curl -I http://localhost:9100/metrics
+```
+
 **Covers:** Basic tagging, multiple tags on a task, CLI filtering
 
 ---
@@ -63,7 +76,7 @@ ansible-playbook 01-tag-basics.yml --list-tags
 
 ```bash
 # Run deploy tasks (+ 'always' tasks run automatically)
-ansible-playbook 02-always-never-tags.yml --tags "deploy"
+ansible-playbook 02-always-never-tags.yml --tags "health"
 
 # Run the cleanup task (tagged 'never', must be explicitly called)
 ansible-playbook 02-always-never-tags.yml --tags "cleanup"

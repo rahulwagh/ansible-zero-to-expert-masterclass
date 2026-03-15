@@ -35,3 +35,12 @@ After deployment, run `terraform output` to get:
 - Instance names and IPs
 - SSH commands for each instance
 - Ansible inventory format
+
+## SSH Keys 
+Location - `/Users/rahulwagh/Downloads/ansible-demo`
+SSH - `ssh -i ansible-course-ssh-key ansible@34.2.62.15`
+
+## Check the Nginx Status 
+
+`sudo systemctl status nginx`
+``

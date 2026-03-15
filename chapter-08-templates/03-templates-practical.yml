@@ -1,0 +1,181 @@
+---
+# ==============================================
+# 04 - Practical: Full App Deployment with Templates
+# ==============================================
+# Run:      ansible-playbook 04-templates-practical.yml
+# Dry-run:  ansible-playbook 04-templates-practical.yml --check --diff
+#
+# Deploys a complete web stack (nginx + app config + landing page)
+# using Jinja2 templates for every configuration file.
+
+- name: "Full web stack deployment with Jinja2 templates"
+  hosts: webservers
+  become: true
+  gather_facts: true
+
+  vars:
+    # --- Application ---
+    app_name: "Flagship-App"
+    app_version: "4.2.1"
+    app_port: 8080
+    app_env: "production"
+    app_debug: false
+    server_env: "production"
+    enabled_features:
+      - dark_mode
+      - metrics
+      - export_csv
+
+    # --- Database ---
+    db_host: "db-primary.internal"
+    db_port: 5432
+    db_name: "{{ app_name | replace('-', '_') }}_db"
+    db_user: "{{ app_name | replace('-', '_') }}_svc"
+    log_level: "WARNING"
+    app_features:
+      dark_mode: true
+      beta_api: false
+      metrics: true
+      export_csv: true
+
+    # --- Nginx ---
+    nginx_worker_processes: "{{ ansible_processor_vcpus }}"
+    nginx_worker_connections: 2048
+    nginx_keepalive_timeout: 75
+    nginx_gzip_enabled: true
+    nginx_vhosts:
+      - server_name: "{{ app_name }}.example.com"
+        port: 80
+        root: "/var/www/{{ app_name }}"
+        proxy_pass: "http://127.0.0.1:{{ app_port }}"
+
+  # -------------------------------------------------------
+  # PRE-TASKS: ensure directories exist before templates run
+  # -------------------------------------------------------
+  pre_tasks:
+    - name: Ensure application directories exist
+      file:
+        path: "{{ item }}"
+        state: directory
+        owner: www-data
+        group: www-data
+        mode: '0755'
+      loop:
+        - "/var/www/{{ app_name }}"
+        - "/etc/{{ app_name }}"
+        - "/var/log/{{ app_name }}"
+
+    - name: Print deployment banner
+      debug:
+        msg: |
+          =====================================================
+          Deploying {{ app_name }} v{{ app_version }}
+          Target host : {{ inventory_hostname }}
+          Environment : {{ app_env | upper }}
+          =====================================================
+
+  # -------------------------------------------------------
+  # MAIN TASKS
+  # -------------------------------------------------------
+  tasks:
+    # --- Package installation ---
+    - name: Install required packages
+      apt:
+        name:
+          - nginx
+          - python3
+          - python3-pip
+        state: present
+        update_cache: true
+      tags: packages
+
+    # --- Configuration templates ---
+    - name: Deploy nginx main config
+      template:
+        src: templates/nginx.conf.j2
+        dest: /etc/nginx/nginx.conf
+        owner: root
+        group: root
+        mode: '0644'
+        validate: '/usr/sbin/nginx -t -c %s'
+        backup: true
+      notify: Reload nginx
+      tags: config
+
+    - name: Deploy application config
+      template:
+        src: templates/app.conf.j2
+        dest: "/etc/{{ app_name }}/app.conf"
+        owner: root
+        group: www-data
+        mode: '0640'
+        backup: true
+      tags: config
+
+    - name: Deploy landing page
+      template:
+        src: templates/index.html.j2
+        dest: "/var/www/{{ app_name }}/index.html"
+        owner: www-data
+        group: www-data
+        mode: '0644'
+      tags: deploy
+
+    - name: Deploy server MOTD
+      template:
+        src: templates/motd.j2
+        dest: /etc/motd
+        owner: root
+        group: root
+        mode: '0644'
+      tags: config
+
+    # --- Service management ---
+    - name: Ensure nginx is enabled and started
+      service:
+        name: nginx
+        state: started
+        enabled: true
+      tags: service
+
+    # --- Verification ---
+    - name: Verify nginx config is valid
+      command: nginx -t
+      register: nginx_test
+      changed_when: false
+      tags: verify
+
+    - name: Check landing page renders correctly
+      uri:
+        url: "http://{{ ansible_default_ipv4.address }}/"
+        return_content: true
+      register: page_response
+      changed_when: false
+      tags: verify
+
+    - name: Assert landing page contains app name
+      assert:
+        that:
+          - app_name in page_response.content
+        fail_msg: "Landing page does not contain '{{ app_name }}'"
+        success_msg: "Landing page verified successfully"
+      tags: verify
+
+  # -------------------------------------------------------
+  # POST-TASKS: summary report
+  # -------------------------------------------------------
+  post_tasks:
+    - name: Deployment summary
+      debug:
+        msg:
+          - "App      : {{ app_name }} v{{ app_version }}"
+          - "Host     : {{ ansible_hostname }} ({{ ansible_default_ipv4.address }})"
+          - "OS       : {{ ansible_distribution }} {{ ansible_distribution_version }}"
+          - "Nginx    : {{ nginx_test.stderr_lines | join(' ') }}"
+          - "Status   : DEPLOYED SUCCESSFULLY"
+
+  handlers:
+    - name: Reload nginx
+      service:
+        name: nginx
+        state: reloaded

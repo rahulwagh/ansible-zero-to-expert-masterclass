@@ -1,0 +1,141 @@
+---
+# ==============================================
+# 02 - Jinja2 Filters
+# ==============================================
+# Run: ansible-playbook 02-jinja2-filters.yml
+#
+# Filters transform variable values inline using the | pipe
+# syntax.  Ansible ships with all built-in Jinja2 filters
+# plus many extras provided by the `ansible.builtin` collection.
+
+- name: "Jinja2 Filters Demo"
+  hosts: webservers
+  gather_facts: true
+
+  vars:
+    # ---- String data ----
+    raw_hostname:  "  My Web Server  "
+    app_env:       "production"
+    file_path:     "/etc/nginx/nginx.conf"
+    multiline_str: "line1\nline2\nline3"
+
+    # ---- Numeric data ----
+    disk_bytes:    53687091200       # 50 GB in bytes
+    memory_kb:     8388608           # 8 GB in KB
+    ratio:         0.6666666
+
+    # ---- List / dict data ----
+    packages:      ["nginx", "curl", "git", "vim", "htop"]
+    server_tags:   { env: production, role: web, region: us-east }
+    empty_list:    []
+    maybe_value:   ~                 # null / None
+
+  tasks:
+    # -------------------------------------------------------
+    # STRING FILTERS
+    # -------------------------------------------------------
+    - name: "String filters demo"
+      debug:
+        msg:
+          - "upper:         {{ raw_hostname | upper }}"
+          - "lower:         {{ raw_hostname | lower }}"
+          - "trim:          {{ raw_hostname | trim }}"
+          - "title:         {{ raw_hostname | trim | title }}"
+          - "replace:       {{ app_env | replace('production', 'prod') }}"
+          - "truncate(10):  {{ raw_hostname | trim | truncate(10) }}"
+          - "basename:      {{ file_path | basename }}"
+          - "dirname:       {{ file_path | dirname }}"
+          - "splitext:      {{ file_path | splitext }}"
+          - "split lines:   {{ multiline_str | split('\n') }}"
+          - "regex_replace: {{ raw_hostname | trim | regex_replace('[aeiouAEIOU]', '*') }}"
+
+    # -------------------------------------------------------
+    # NUMERIC FILTERS
+    # -------------------------------------------------------
+    - name: "Numeric filters demo"
+      debug:
+        msg:
+          - "round(2):      {{ ratio | round(2) }}"
+          - "int:           {{ '42' | int }}"
+          - "float:         {{ '3.14' | float }}"
+          - "abs:           {{ -99 | abs }}"
+          - "filesizeformat: {{ disk_bytes | filesizeformat }}"
+          - "power:         {{ 2 | pow(10) }}"
+          - "log:           {{ 1024 | log(2) | round(0) }}"
+
+    # -------------------------------------------------------
+    # LIST FILTERS
+    # -------------------------------------------------------
+    - name: "List filters demo"
+      debug:
+        msg:
+          - "length:        {{ packages | length }}"
+          - "first:         {{ packages | first }}"
+          - "last:          {{ packages | last }}"
+          - "min:           {{ [5, 3, 8, 1, 9] | min }}"
+          - "max:           {{ [5, 3, 8, 1, 9] | max }}"
+          - "sum:           {{ [1, 2, 3, 4, 5] | sum }}"
+          - "sort:          {{ packages | sort }}"
+          - "reverse:       {{ packages | reverse | list }}"
+          - "join:          {{ packages | join(', ') }}"
+          - "unique:        {{ ['a','b','a','c','b'] | unique | list }}"
+          - "select nginx:  {{ packages | select('equalto', 'nginx') | list }}"
+          - "reject curl:   {{ packages | reject('equalto', 'curl') | list }}"
+
+    # -------------------------------------------------------
+    # DICT FILTERS
+    # -------------------------------------------------------
+    - name: "Dict filters demo"
+      debug:
+        msg:
+          - "keys:          {{ server_tags | dict2items | map(attribute='key') | list }}"
+          - "values:        {{ server_tags | dict2items | map(attribute='value') | list }}"
+          - "dict2items:    {{ server_tags | dict2items }}"
+          - "combine:       {{ server_tags | combine({'version': '2.0'}) }}"
+
+    # -------------------------------------------------------
+    # DEFAULT / CONDITIONAL FILTERS
+    # -------------------------------------------------------
+    - name: "Default and conditional filters demo"
+      debug:
+        msg:
+          - "default:       {{ maybe_value | default('fallback_value') }}"
+          - "default(omit): using omit skips the key entirely in tasks"
+          - "bool true:     {{ 'yes' | bool }}"
+          - "bool false:    {{ 'no' | bool }}"
+          - "ternary:       {{ (app_env == 'production') | ternary('PROD', 'NON-PROD') }}"
+          - "mandatory:     use | mandatory to fail fast on undefined vars"
+
+    # -------------------------------------------------------
+    # TYPE CONVERSION FILTERS
+    # -------------------------------------------------------
+    - name: "Type conversion filters demo"
+      debug:
+        msg:
+          - "to_json:       {{ server_tags | to_json }}"
+          - "to_yaml:       {{ server_tags | to_nice_yaml }}"
+          - "from_json:     {{ '{\"key\": \"val\"}' | from_json }}"
+          - "string:        {{ 42 | string }}"
+          - "list:          {{ 'hello' | list }}"
+
+    # -------------------------------------------------------
+    # HASHING / ENCODING FILTERS
+    # -------------------------------------------------------
+    - name: "Hash and encoding filters demo"
+      debug:
+        msg:
+          - "hash sha1:     {{ 'mypassword' | hash('sha1') }}"
+          - "hash sha256:   {{ 'mypassword' | hash('sha256') }}"
+          - "b64encode:     {{ 'hello ansible' | b64encode }}"
+          - "b64decode:     {{ 'aGVsbG8gYW5zaWJsZQ==' | b64decode }}"
+
+    # -------------------------------------------------------
+    # ANSIBLE-SPECIFIC FILTERS
+    # -------------------------------------------------------
+    - name: "Ansible-specific filters demo"
+      debug:
+        msg:
+          - "ipaddr:        {{ ansible_default_ipv4.address | ansible.utils.ipaddr }}"
+          - "regex_search:  {{ 'nginx-1.24.0' | regex_search('([0-9]+\\.[0-9]+\\.[0-9]+)') }}"
+          - "flatten:       {{ [[1,2],[3,[4,5]]] | flatten }}"
+          - "zip:           {{ ['a','b','c'] | zip([1,2,3]) | list }}"

@@ -27,63 +27,11 @@
         mode: "0755"
       tags: always
 
-    - name: Deploy application code
-      copy:
-        src: /tmp/{{ app_name }}-release.tar.gz
-        dest: "{{ deploy_dir }}/release.tar.gz"
-        remote_src: true
-      tags: deploy
-
-    - name: Update nginx config
-      template:
-        src: /tmp/nginx-{{ app_name }}.conf
-        dest: /etc/nginx/sites-available/{{ app_name }}
-      tags: config
-
     # This also always runs - good for post-deploy verification
     - name: Check application health
       uri:
-        url: "http://localhost:8080/health"
+        url: "http://localhost:80"
         status_code: 200
       register: health_check
       ignore_errors: true
-      tags: always
-
-
-- name: "Example 2: never tag - dangerous or one-time tasks"
-  hosts: all
-  become: true
-  gather_facts: false
-
-  vars:
-    app_name: "myapp"
-    deploy_dir: "/opt/{{ app_name }}"
-
-  tasks:
-    - name: Stop application
-      service:
-        name: "{{ app_name }}"
-        state: stopped
-      tags: maintenance
-
-    - name: Run database migration
-      command: "{{ deploy_dir }}/bin/migrate --execute"
-      tags: migrate
-
-    # Destructive! Only runs when explicitly requested:
-    #   ansible-playbook 02-always-never-tags.yml --tags "cleanup"
-    - name: Purge old releases (keeps only latest 3)
-      shell: |
-        cd {{ deploy_dir }}/releases
-        ls -t | tail -n +4 | xargs rm -rf
-      tags:
-        - never
-        - cleanup
-
-    # Only runs when explicitly requested:
-    #   ansible-playbook 02-always-never-tags.yml --tags "reset_db"
-    - name: Reset database to factory defaults
-      command: "{{ deploy_dir }}/bin/migrate --reset --seed"
-      tags:
-        - never
-        - reset_db
+      tags: health
