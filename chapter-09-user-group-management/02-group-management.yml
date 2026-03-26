@@ -1,0 +1,162 @@
+---
+# ==============================================
+# 02 - Group Management
+# ==============================================
+# Run: ansible-playbook 02-group-management.yml
+#
+# The `group` module manages Linux groups.
+# The `user` module's `groups` / `append` parameters
+# control which supplementary groups a user belongs to.
+
+# ----------------------------------------------
+# Example 1: Create a basic group
+# ----------------------------------------------
+- name: "Example 1: Create a basic group"
+  hosts: webservers
+  become: true
+
+  tasks:
+    - name: Create group 'developers'
+      group:
+        name: developers
+        state: present
+
+    - name: Verify group exists
+      command: getent group developers
+      register: grp_info
+      changed_when: false
+
+    - name: Show group entry
+      debug:
+        var: grp_info.stdout
+
+# ----------------------------------------------
+# Example 2: Create group with a specific GID
+# ----------------------------------------------
+- name: "Example 2: Create group with specific GID"
+  hosts: webservers
+  become: true
+
+  tasks:
+    - name: Create group 'devops' with GID 3001
+      group:
+        name: devops
+        gid: 3001
+        state: present
+
+    - name: Confirm GID
+      command: getent group devops
+      register: devops_grp
+      changed_when: false
+
+    - name: Print devops group entry
+      debug:
+        var: devops_grp.stdout
+
+# ----------------------------------------------
+# Example 3: Create a system group
+# ----------------------------------------------
+- name: "Example 3: Create a system group"
+  hosts: webservers
+  become: true
+
+  tasks:
+    - name: Create system group 'appgroup' (GID < 1000)
+      group:
+        name: appgroup
+        system: true
+        state: present
+
+    - name: Show appgroup entry
+      command: getent group appgroup
+      register: appgroup_info
+      changed_when: false
+
+    - name: Print system group info
+      debug:
+        var: appgroup_info.stdout
+
+# ----------------------------------------------
+# Example 4: Add a user to supplementary groups
+# ----------------------------------------------
+- name: "Example 4: Add user to supplementary groups"
+  hosts: webservers
+  become: true
+
+  tasks:
+    - name: Ensure user 'bob' exists
+      user:
+        name: bob
+        state: present
+
+    - name: Add bob to 'developers' and 'devops' groups
+      user:
+        name: bob
+        groups:
+          - developers
+          - devops
+        append: true   # append = true keeps existing groups intact
+                       # append = false would REPLACE all groups
+
+    - name: Show bob's group memberships
+      command: id bob
+      register: bob_groups
+      changed_when: false
+
+    - name: Print bob's groups
+      debug:
+        var: bob_groups.stdout
+
+# ----------------------------------------------
+# Example 5: Replace (not append) supplementary groups
+# ----------------------------------------------
+- name: "Example 5: Replace a user's supplementary groups"
+  hosts: webservers
+  become: true
+
+  tasks:
+    - name: Ensure user 'carol' exists
+      user:
+        name: carol
+        state: present
+
+    - name: Set carol's groups to ONLY 'developers' (replaces existing)
+      user:
+        name: carol
+        groups:
+          - developers
+        append: false  # WARNING: removes carol from all other groups
+
+    - name: Show carol's group memberships
+      command: id carol
+      register: carol_groups
+      changed_when: false
+
+    - name: Print carol's groups
+      debug:
+        var: carol_groups.stdout
+
+# ----------------------------------------------
+# Example 6: Remove a group
+# ----------------------------------------------
+- name: "Example 6: Remove a group"
+  hosts: webservers
+  become: true
+
+  tasks:
+    - name: Remove group 'appgroup'
+      group:
+        name: appgroup
+        state: absent
+
+    - name: Confirm group is gone
+      command: getent group appgroup
+      register: check_grp
+      failed_when: check_grp.rc == 0
+      changed_when: false
+      ignore_errors: true
+
+    - name: Group successfully removed
+      debug:
+        msg: "appgroup has been removed"
+      when: check_grp.rc != 0

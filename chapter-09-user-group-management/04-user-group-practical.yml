@@ -1,0 +1,200 @@
+---
+# ==============================================
+# 04 - Practical: Onboard a Developer Team
+# ==============================================
+# Run: ansible-playbook 04-user-group-practical.yml
+#
+# Real-world scenario: Provision users and groups for a new
+# developer team on a fleet of application servers.
+#
+# What this playbook does:
+#   1. Create groups: developers, devops, deployment
+#   2. Create users with proper shells, homes, passwords
+#   3. Add users to appropriate groups
+#   4. Configure SSH authorized keys for each user
+#   5. Create a shared deployment directory owned by the deployment group
+#   6. Create a read-only service account for CI/CD
+
+- name: "Onboard Developer Team - Users, Groups & SSH Keys"
+  hosts: webservers
+  become: true
+  gather_facts: true
+
+  vars:
+    # ---- Groups to create ----
+    team_groups:
+      - { name: developers, gid: 3001 }
+      - { name: devops,      gid: 3002 }
+      - { name: deployment,  gid: 3003 }
+
+    # ---- Users to onboard ----
+    team_users:
+      - name: alice
+        uid: 4001
+        comment: "Alice - Backend Developer"
+        shell: /bin/bash
+        groups: [developers, devops]
+        pub_key: "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABgQDAliceDemoKeyAnsibleCourse alice@laptop"
+
+      - name: bob
+        uid: 4002
+        comment: "Bob - Frontend Developer"
+        shell: /bin/bash
+        groups: [developers]
+        pub_key: "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABgQDBobDemoKeyAnsibleCourse bob@workstation"
+
+      - name: carol
+        uid: 4003
+        comment: "Carol - DevOps Engineer"
+        shell: /bin/bash
+        groups: [developers, devops, deployment]
+        pub_key: "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABgQDCarolDemoKeyAnsibleCourse carol@macbook"
+
+    # ---- Service account for CI/CD ----
+    ci_user: cibot
+    ci_pub_key: "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIDemoCIBotKeyAnsible cibot@pipeline"
+
+    # ---- Shared deployment directory ----
+    deploy_dir: /opt/app/releases
+
+  # ============================================================
+  # STEP 1: Create groups
+  # ============================================================
+  tasks:
+    - name: "Step 1 | Create team groups"
+      group:
+        name: "{{ item.name }}"
+        gid: "{{ item.gid }}"
+        state: present
+      loop: "{{ team_groups }}"
+
+    - name: "Step 1 | Verify all groups exist"
+      command: "getent group {{ item.name }}"
+      loop: "{{ team_groups }}"
+      changed_when: false
+      register: group_check
+
+    - name: "Step 1 | Show created groups"
+      debug:
+        msg: "{{ item.stdout }}"
+      loop: "{{ group_check.results }}"
+      loop_control:
+        label: "{{ item.item.name }}"
+
+  # ============================================================
+  # STEP 2: Create users
+  # ============================================================
+    - name: "Step 2 | Create team user accounts"
+      user:
+        name: "{{ item.name }}"
+        uid: "{{ item.uid }}"
+        comment: "{{ item.comment }}"
+        shell: "{{ item.shell }}"
+        create_home: true
+        state: present
+      loop: "{{ team_users }}"
+
+  # ============================================================
+  # STEP 3: Assign users to groups
+  # ============================================================
+    - name: "Step 3 | Assign users to their groups"
+      user:
+        name: "{{ item.name }}"
+        groups: "{{ item.groups }}"
+        append: true
+      loop: "{{ team_users }}"
+
+    - name: "Step 3 | Verify group memberships"
+      command: "id {{ item.name }}"
+      loop: "{{ team_users }}"
+      register: membership_check
+      changed_when: false
+
+    - name: "Step 3 | Display memberships"
+      debug:
+        msg: "{{ item.stdout }}"
+      loop: "{{ membership_check.results }}"
+      loop_control:
+        label: "{{ item.item.name }}"
+
+  # ============================================================
+  # STEP 4: Configure SSH authorized keys
+  # ============================================================
+    - name: "Step 4 | Add SSH authorized keys for team members"
+      authorized_key:
+        user: "{{ item.name }}"
+        key: "{{ item.pub_key }}"
+        state: present
+      loop: "{{ team_users }}"
+
+    - name: "Step 4 | Verify SSH key files exist"
+      stat:
+        path: "/home/{{ item.name }}/.ssh/authorized_keys"
+      loop: "{{ team_users }}"
+      register: key_files
+
+    - name: "Step 4 | Report key file status"
+      debug:
+        msg: "{{ item.item.name }} authorized_keys exists: {{ item.stat.exists }}"
+      loop: "{{ key_files.results }}"
+      loop_control:
+        label: "{{ item.item.name }}"
+
+  # ============================================================
+  # STEP 5: Create CI/CD service account
+  # ============================================================
+    - name: "Step 5 | Create CI/CD service account"
+      user:
+        name: "{{ ci_user }}"
+        system: true
+        shell: /bin/bash
+        comment: "CI/CD Pipeline Bot"
+        groups: [deployment]
+        append: true
+        state: present
+
+    - name: "Step 5 | Add CI/CD bot SSH key (restricted to deployment commands)"
+      authorized_key:
+        user: "{{ ci_user }}"
+        key: "{{ ci_pub_key }}"
+        key_options: 'no-port-forwarding,no-X11-forwarding,no-agent-forwarding'
+        state: present
+
+  # ============================================================
+  # STEP 6: Create shared deployment directory
+  # ============================================================
+    - name: "Step 6 | Create deployment directory"
+      file:
+        path: "{{ deploy_dir }}"
+        state: directory
+        owner: "{{ ci_user }}"
+        group: deployment
+        mode: '2775'   # setgid bit — new files inherit 'deployment' group
+
+    - name: "Step 6 | Verify deployment directory"
+      stat:
+        path: "{{ deploy_dir }}"
+      register: deploy_dir_stat
+
+    - name: "Step 6 | Show deployment directory info"
+      debug:
+        msg:
+          - "Path:  {{ deploy_dir_stat.stat.path }}"
+          - "Owner: {{ deploy_dir_stat.stat.pw_name }}"
+          - "Group: {{ deploy_dir_stat.stat.gr_name }}"
+          - "Mode:  {{ deploy_dir_stat.stat.mode }}"
+
+  # ============================================================
+  # STEP 7: Final summary
+  # ============================================================
+    - name: "Step 7 | Final onboarding summary"
+      debug:
+        msg:
+          - "========================================="
+          - "  Developer Team Onboarding Complete"
+          - "========================================="
+          - "Groups created : {{ team_groups | map(attribute='name') | join(', ') }}"
+          - "Users created  : {{ team_users | map(attribute='name') | join(', ') }}"
+          - "CI user        : {{ ci_user }}"
+          - "Deploy dir     : {{ deploy_dir }}"
+          - "========================================="

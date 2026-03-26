@@ -69,7 +69,7 @@ Welcome to the **Ansible Zero to Expert Masterclass**! This comprehensive course
 | 06 | [Handlers](./chapter-06-handlers/) | handlers, notify, listen, flush_handlers | ✅ Ready |
 | 07 | [Tags](./chapter-07-tags/) | tags, always, never, --tags, --skip-tags | ✅ Ready |
 | 08 | [Templates](./chapter-08-templates/) | Jinja2 templates, filters, template module | ✅ Ready |
-| 09 | Register & Debug | register, debug, assert, fail | 📝 Coming Soon |
+| 09 | [User & Group Management](./chapter-09-user-group-management/) | user, group, authorized_key | ✅ Ready |
 | 10 | File Management | copy, file, lineinfile, blockinfile | 📝 Coming Soon |
 | 11 | Package Management | apt, yum, package, pip | 📝 Coming Soon |
 
@@ -78,7 +78,7 @@ Welcome to the **Ansible Zero to Expert Masterclass**! This comprehensive course
 | # | Chapter | Description | Status |
 |---|---------|-------------|--------|
 | 12 | Service Management | service, systemd, restarted, enabled | 📝 Coming Soon |
-| 13 | User & Group Management | user, group, authorized_key | 📝 Coming Soon |
+| 13 | Blocks & Error Handling | block, rescue, always, ignore_errors | 📝 Coming Soon |
 | 14 | Blocks & Error Handling | block, rescue, always, ignore_errors | 📝 Coming Soon |
 | 15 | Roles | Role structure, defaults, tasks, handlers | 📝 Coming Soon |
 | 16 | Ansible Galaxy | Install roles, collections, requirements.yml | 📝 Coming Soon |
@@ -275,6 +275,17 @@ ansible-zero-to-expert-masterclass/
 │   ├── 02-jinja2-filters.yml
 │   ├── 03-template-advanced.yml
 │   ├── 04-templates-practical.yml
+│   └── README.md
+│
+├── 📁 chapter-09-user-group-management/  # User & Group Management
+│   ├── ansible.cfg
+│   ├── inventory/
+│   ├── files/
+│   │   └── id_rsa_devops.pub
+│   ├── 01-user-basics.yml
+│   ├── 02-group-management.yml
+│   ├── 03-authorized-keys.yml
+│   ├── 04-user-group-practical.yml
 │   └── README.md
 │
 └── 📁 util/                        # Utilities

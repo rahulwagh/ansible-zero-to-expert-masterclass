@@ -1,0 +1,168 @@
+---
+# ==============================================
+# 01 - User Management Basics
+# ==============================================
+# Run: ansible-playbook 01-user-basics.yml
+#
+# The `user` module manages user accounts on Linux.
+# It is idempotent — running it multiple times is safe.
+
+# ----------------------------------------------
+# Example 1: Create a simple user
+# List only human/login users (UID >= 1000, excluding nobody)
+#  awk -F: '$3 >= 1000 && $3 < 65534 {print $1}' /etc/passwd
+# ----------------------------------------------
+- name: "Example 1: Create a basic user"
+  hosts: webservers
+  become: true
+
+  tasks:
+    - name: Create user 'alice'
+      user:
+        name: alice
+        comment: "Alice Dev"
+        state: present
+
+    - name: Verify user exists
+      command: id alice
+      register: user_info
+      changed_when: false
+
+    - name: Show user info
+      debug:
+        var: user_info.stdout
+
+# ----------------------------------------------
+# Example 2: User with full options
+# List user name with uuid
+# awk -F: '$3 >= 1000 && $3 < 65534 {print $1, $3}' /etc/passwd
+# ----------------------------------------------
+- name: "Example 2: Create user with specific UID, shell, and home dir"
+  hosts: webservers
+  become: true
+
+  tasks:
+    - name: Create user 'bob' with custom options
+      user:
+        name: bob
+        uid: 2001
+        comment: "Bob the Builder"
+        shell: /bin/bash
+        home: /home/bob
+        create_home: true
+        state: present
+
+    - name: Verify bob's details
+      command: getent passwd bob
+      register: bob_info
+      changed_when: false
+
+    - name: Show bob's passwd entry
+      debug:
+        var: bob_info.stdout
+
+## ----------------------------------------------
+## Example 3: Create a system user (service account)
+# List the system user
+# awk -F: '$3 < 1000 {printf "%-20s %s\n", $1, $3}' /etc/passwd
+## ----------------------------------------------
+- name: "Example 3: Create a system/service user"
+  hosts: webservers
+  become: true
+
+  tasks:
+    - name: Create system user 'apprunner' (no login shell, no home)
+      user:
+        name: apprunner
+        system: true           # allocates UID below 1000
+        shell: /usr/sbin/nologin
+        create_home: false
+        comment: "App service account"
+        state: present
+
+    - name: Show apprunner details
+      command: id apprunner
+      register: svc_info
+      changed_when: false
+
+    - name: Print service user info
+      debug:
+        var: svc_info.stdout
+
+## ----------------------------------------------
+## Example 4: Set a user password
+# View a specific user's shadow entry
+#  sudo getent shadow alice
+## ----------------------------------------------
+- name: "Example 4: Set user password using password_hash"
+  hosts: webservers
+  become: true
+
+  vars:
+    # Generate with: python3 -c "from passlib.hash import sha512_crypt; print(sha512_crypt.using(rounds=5000).hash('MySecret123'))"
+    carol_password: "$6$rounds=5000$sampleSalt$sampleHashedPasswordHere"
+
+  tasks:
+    - name: Create user 'carol' with a hashed password
+      user:
+        name: carol
+        password: "{{ carol_password }}"
+        update_password: on_create   # only set password on first creation
+        shell: /bin/bash
+        state: present
+
+    - name: Force password change on first login
+      command: chage -d 0 carol
+      changed_when: false
+
+## ----------------------------------------------
+## Example 5: Modify an existing user
+# getent passwd alice
+## ----------------------------------------------
+- name: "Example 5: Modify user shell and comment"
+  hosts: webservers
+  become: true
+
+  tasks:
+    - name: Update alice's shell to /bin/zsh and add comment
+      user:
+        name: alice
+        shell: /bin/bash          # change shell
+        comment: "Alice (Updated)"
+        state: present
+
+    - name: Confirm alice's updated entry
+      command: getent passwd alice
+      register: alice_updated
+      changed_when: false
+
+    - name: Print updated entry
+      debug:
+        var: alice_updated.stdout
+
+## ----------------------------------------------
+## Example 6: Remove a user
+# getent passwd alice
+## ----------------------------------------------
+- name: "Example 6: Remove a user"
+  hosts: webservers
+  become: true
+
+  tasks:
+    - name: Remove user 'alice' and their home directory
+      user:
+        name: alice
+        state: absent
+        remove: true    # deletes home dir and mail spool
+
+    - name: Confirm alice is gone
+      command: id alice
+      register: check_alice
+      failed_when: check_alice.rc == 0
+      changed_when: false
+      ignore_errors: true
+
+    - name: User successfully removed
+      debug:
+        msg: "alice has been removed from the system"
+      when: check_alice.rc != 0

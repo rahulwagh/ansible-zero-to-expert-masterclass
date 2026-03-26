@@ -1,0 +1,202 @@
+---
+# ==============================================
+# 03 - Authorized Keys Management
+# ==============================================
+# Run: ansible-playbook 03-authorized-keys.yml
+#
+# The `authorized_key` module manages SSH public keys
+# in a user's ~/.ssh/authorized_keys file.
+# It is idempotent — adding the same key twice is safe.
+
+# ----------------------------------------------
+# Example 1: Add an SSH public key for a user
+# ----------------------------------------------
+- name: "Example 1: Add SSH key for a user (inline)"
+  hosts: webservers
+  become: true
+
+  vars:
+    devops_pub_key: "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABgQDemoKeyForAnsibleCourse devops@control-node"
+
+  tasks:
+    - name: Ensure user 'deploy' exists
+      user:
+        name: deploy
+        shell: /bin/bash
+        state: present
+
+    - name: Add SSH public key for 'deploy' user
+      authorized_key:
+        user: deploy
+        key: "{{ devops_pub_key }}"
+        state: present
+
+    - name: Verify authorized_keys file
+      command: cat /home/deploy/.ssh/authorized_keys
+      register: auth_keys_content
+      changed_when: false
+
+    - name: Show authorized_keys
+      debug:
+        var: auth_keys_content.stdout
+
+# ----------------------------------------------
+# Example 2: Add SSH key from a local file
+# ----------------------------------------------
+- name: "Example 2: Add SSH key from a local public key file"
+  hosts: webservers
+  become: true
+
+  tasks:
+    - name: Ensure user 'deploy' exists
+      user:
+        name: deploy
+        shell: /bin/bash
+        state: present
+
+    - name: Add key from local file using lookup
+      authorized_key:
+        user: deploy
+        key: "{{ lookup('file', 'files/id_rsa_devops.pub') }}"
+        state: present
+
+    - name: Confirm key was added
+      command: cat /home/deploy/.ssh/authorized_keys
+      register: key_check
+      changed_when: false
+
+    - name: Show keys
+      debug:
+        var: key_check.stdout
+
+# ----------------------------------------------
+# Example 3: Add multiple SSH keys for a user
+# ----------------------------------------------
+- name: "Example 3: Add multiple SSH keys in a loop"
+  hosts: webservers
+  become: true
+
+  vars:
+    ssh_keys:
+      - key: "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABgQDkey1ForDemoAnsibleCourse admin1@laptop"
+        comment: "admin1 laptop key"
+      - key: "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABgQDkey2ForDemoAnsibleCourse admin2@workstation"
+        comment: "admin2 workstation key"
+      - key: "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIDemoEd25519KeyForAnsible ci-bot@pipeline"
+        comment: "CI/CD bot key"
+
+  tasks:
+    - name: Ensure user 'deploy' exists
+      user:
+        name: deploy
+        shell: /bin/bash
+        state: present
+
+    - name: Add all SSH keys for 'deploy'
+      authorized_key:
+        user: deploy
+        key: "{{ item.key }}"
+        comment: "{{ item.comment }}"
+        state: present
+      loop: "{{ ssh_keys }}"
+
+    - name: Show final authorized_keys
+      command: cat /home/deploy/.ssh/authorized_keys
+      register: all_keys
+      changed_when: false
+
+    - name: Display all keys
+      debug:
+        var: all_keys.stdout_lines
+
+# ----------------------------------------------
+# Example 4: Add key with restrictions (key_options)
+# ----------------------------------------------
+- name: "Example 4: Add SSH key with options (restrict command)"
+  hosts: webservers
+  become: true
+
+  vars:
+    restricted_key: "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABgQDRestrictedKeyDemo backup@remote"
+
+  tasks:
+    - name: Ensure user 'backup' exists
+      user:
+        name: backup
+        shell: /bin/bash
+        state: present
+
+    - name: Add restricted key (command= option limits what the key can run)
+      authorized_key:
+        user: backup
+        key: "{{ restricted_key }}"
+        key_options: 'no-port-forwarding,no-X11-forwarding,command="/usr/bin/rsync --server"'
+        state: present
+
+    - name: Show backup user's authorized_keys
+      command: cat /home/backup/.ssh/authorized_keys
+      register: backup_keys
+      changed_when: false
+
+    - name: Display restricted key entry
+      debug:
+        var: backup_keys.stdout
+
+# ----------------------------------------------
+# Example 5: Set exclusive authorized_keys
+#            (remove ALL other keys, keep only these)
+# ----------------------------------------------
+- name: "Example 5: Exclusive key management (replace all keys)"
+  hosts: webservers
+  become: true
+
+  vars:
+    only_approved_key: "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABgQDApprovedOnlyKey security@company.com"
+
+  tasks:
+    - name: Ensure user 'deploy' exists
+      user:
+        name: deploy
+        shell: /bin/bash
+        state: present
+
+    - name: Replace ALL authorized_keys with ONLY the approved key
+      authorized_key:
+        user: deploy
+        key: "{{ only_approved_key }}"
+        exclusive: true   # removes any key NOT in this list
+
+    - name: Verify only the approved key remains
+      command: cat /home/deploy/.ssh/authorized_keys
+      register: exclusive_check
+      changed_when: false
+
+    - name: Show final authorized_keys (should have exactly 1 key)
+      debug:
+        var: exclusive_check.stdout_lines
+
+# ----------------------------------------------
+# Example 6: Remove a specific SSH key
+# ----------------------------------------------
+- name: "Example 6: Remove an SSH key"
+  hosts: webservers
+  become: true
+
+  vars:
+    key_to_remove: "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABgQDkey1ForDemoAnsibleCourse admin1@laptop"
+
+  tasks:
+    - name: Remove specific SSH key from 'deploy' user
+      authorized_key:
+        user: deploy
+        key: "{{ key_to_remove }}"
+        state: absent
+
+    - name: Show remaining keys
+      command: cat /home/deploy/.ssh/authorized_keys
+      register: remaining_keys
+      changed_when: false
+
+    - name: Display remaining keys
+      debug:
+        var: remaining_keys.stdout_lines
