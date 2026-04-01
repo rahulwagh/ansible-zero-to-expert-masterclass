@@ -41,7 +41,7 @@
           location ~ \.php$ {
             fastcgi_pass unix:/var/run/php/php8.1-fpm.sock;
             fastcgi_index index.php;
-            include fastcgi_params;
+            include /etc/nginx/fastcgi_params;
           }
 
     php_packages:

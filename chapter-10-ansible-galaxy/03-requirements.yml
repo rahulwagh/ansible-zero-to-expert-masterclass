@@ -25,6 +25,8 @@
 roles:
   # Install by role name (latest version)
   - name: geerlingguy.nginx
+  - name: geerlingguy.php
+  - name: geerlingguy.mysql
 
   # Install a specific version
   - name: geerlingguy.git

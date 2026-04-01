@@ -23,9 +23,9 @@
 #  tasks:
 #    - name: Send Slack notification
 #      community.general.slack:
-#        token: "xoxb-YOUR-SLACK-TOKEN"
-#        msg: "Ansible deployment complete!"
-#        channel: "#devops"
+#        token: ""
+#        msg: "Test Message 1: Ansible deployment complete!"
+#        channel: "#all-deploy-with-rahul"
 #        color: good
 
 # ----------------------------------------------
@@ -33,48 +33,65 @@
 #   Creates a MySQL database using the mysql collection
 #   ansible-galaxy collection install community.mysql
 # ----------------------------------------------
-#- name: "Example 2: Use community.mysql collection"
-#  hosts: dbservers
-#  become: true
-#
-#  tasks:
-#    - name: Create application database
-#      community.mysql.mysql_db:
-#        name: appdb
-#        state: present
-#        login_unix_socket: /var/run/mysqld/mysqld.sock
-#
-#    - name: Create database user
-#      community.mysql.mysql_user:
-#        name: appuser
-#        password: "SecurePass123!"
-#        priv: "appdb.*:ALL"
-#        state: present
-#        login_unix_socket: /var/run/mysqld/mysqld.sock
+- name: "Example 2: Use community.mysql collection"
+  hosts: webservers
+  become: true
+
+  pre_tasks:
+    - name: Install MySQL server
+      ansible.builtin.package:
+        name: mysql-server
+        state: present
+
+    - name: Ensure MySQL service is started
+      ansible.builtin.service:
+        name: mysql
+        state: started
+        enabled: true
+
+    - name: Install PyMySQL (required by community.mysql modules)
+      ansible.builtin.package:
+        name: python3-pymysql
+        state: present
+
+  tasks:
+    - name: Create application database
+      community.mysql.mysql_db:
+        name: appdb
+        state: present
+        login_unix_socket: /var/run/mysqld/mysqld.sock
+
+    - name: Create database user
+      community.mysql.mysql_user:
+        name: appuser
+        password: "SecurePass123!"
+        priv: "appdb.*:ALL"
+        state: present
+        login_unix_socket: /var/run/mysqld/mysqld.sock
 
 # ----------------------------------------------
 # Example 3: Use ansible.posix collection
 #   ansible-galaxy collection install ansible.posix
 #   Provides posix-specific modules like firewalld, sysctl
 # ----------------------------------------------
-#- name: "Example 3: Use ansible.posix collection"
-#  hosts: webservers
-#  become: true
-#
-#  tasks:
-#    - name: Allow HTTP through firewall
-#      ansible.posix.firewalld:
-#        service: http
-#        permanent: true
-#        state: enabled
-#        immediate: true
-#
-#    - name: Set vm.swappiness via sysctl
-#      ansible.posix.sysctl:
-#        name: vm.swappiness
-#        value: "10"
-#        state: present
-#        reload: true
+- name: "Example 3: Use ansible.posix collection"
+  hosts: webservers
+  become: true
+
+  tasks:
+    - name: Allow HTTP through firewall
+      ansible.posix.firewalld:
+        service: http
+        permanent: true
+        state: enabled
+        immediate: true
+
+    - name: Set vm.swappiness via sysctl
+      ansible.posix.sysctl:
+        name: vm.swappiness
+        value: "10"
+        state: present
+        reload: true
 
 # ----------------------------------------------
 # Example 4: Use FQCN for built-in modules (best practice)
