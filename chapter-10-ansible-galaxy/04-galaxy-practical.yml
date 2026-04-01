@@ -1,0 +1,148 @@
+---
+# ==============================================
+# 04 - Practical: Full LAMP Stack via Galaxy
+# ==============================================
+# Demonstrates a real-world scenario using Galaxy roles and collections
+# together to deploy a LAMP stack (Linux, Apache/Nginx, MySQL, PHP).
+#
+# Setup steps:
+#   1. Install all dependencies:
+#        ansible-galaxy install -r requirements.yml
+#
+#   2. Dry-run to preview:
+#        ansible-playbook 04-galaxy-practical.yml --check --diff
+#
+#   3. Run the full deployment:
+#        ansible-playbook 04-galaxy-practical.yml
+#
+#   4. Verify:
+#        curl http://<webserver-ip>/
+#        mysql -u appuser -p -h <dbserver-ip>
+# ==============================================
+
+# ----------------------------------------------
+# Play 1: Configure web servers with Nginx + PHP
+# Uses: geerlingguy.nginx, geerlingguy.php
+#   ansible-galaxy role install geerlingguy.nginx geerlingguy.php
+# ----------------------------------------------
+- name: "Play 1: Deploy Nginx and PHP on web servers"
+  hosts: webservers
+  become: true
+
+  vars:
+    nginx_listen_port: 80
+    nginx_remove_default_vhost: true
+    nginx_vhosts:
+      - listen: "80"
+        server_name: "myapp.example.com"
+        root: "/var/www/myapp"
+        index: "index.php index.html"
+        extra_parameters: |
+          location ~ \.php$ {
+            fastcgi_pass unix:/var/run/php/php8.1-fpm.sock;
+            fastcgi_index index.php;
+            include fastcgi_params;
+          }
+
+    php_packages:
+      - php8.1
+      - php8.1-fpm
+      - php8.1-mysql
+      - php8.1-xml
+
+  roles:
+    - geerlingguy.nginx
+    - geerlingguy.php
+
+  post_tasks:
+    - name: Create web root directory
+      ansible.builtin.file:
+        path: /var/www/myapp
+        state: directory
+        owner: www-data
+        group: www-data
+        mode: "0755"
+
+    - name: Deploy index.php
+      ansible.builtin.copy:
+        dest: /var/www/myapp/index.php
+        content: |
+          <?php
+          echo "<h1>Deployed via Ansible Galaxy</h1>";
+          echo "<p>Server: " . gethostname() . "</p>";
+          phpinfo();
+          ?>
+        owner: www-data
+        group: www-data
+        mode: "0644"
+
+# ----------------------------------------------
+# Play 2: Configure database server with MySQL
+# Uses: geerlingguy.mysql
+#   ansible-galaxy role install geerlingguy.mysql
+# ----------------------------------------------
+- name: "Play 2: Deploy MySQL on database servers"
+  hosts: dbservers
+  become: true
+
+  vars:
+    mysql_root_password: "R00tSecure!2024"
+    mysql_databases:
+      - name: appdb
+        encoding: utf8mb4
+        collation: utf8mb4_unicode_ci
+    mysql_users:
+      - name: appuser
+        host: "%"
+        password: "AppSecure!2024"
+        priv: "appdb.*:ALL"
+
+  roles:
+    - geerlingguy.mysql
+
+  post_tasks:
+    - name: Verify MySQL is running
+      ansible.builtin.service:
+        name: mysql
+        state: started
+      register: mysql_svc
+
+    - name: Confirm MySQL service state
+      ansible.builtin.debug:
+        msg: "MySQL is {{ mysql_svc.state }}"
+
+# ----------------------------------------------
+# Play 3: Firewall rules using ansible.posix collection
+#   ansible-galaxy collection install ansible.posix
+# ----------------------------------------------
+- name: "Play 3: Configure firewall on all servers"
+  hosts: production
+  become: true
+
+  tasks:
+    - name: Allow SSH
+      ansible.posix.firewalld:
+        service: ssh
+        permanent: true
+        state: enabled
+        immediate: true
+
+    - name: Allow HTTP on webservers
+      ansible.posix.firewalld:
+        service: http
+        permanent: true
+        state: enabled
+        immediate: true
+      when: "'webservers' in group_names"
+
+    - name: Allow MySQL from webservers only
+      ansible.posix.firewalld:
+        rich_rule: >
+          rule family="ipv4"
+          source address="{{ hostvars[item]['ansible_host'] }}"
+          port port="3306" protocol="tcp" accept
+        permanent: true
+        state: enabled
+        immediate: true
+      loop: "{{ groups['webservers'] }}"
+      when: "'dbservers' in group_names"

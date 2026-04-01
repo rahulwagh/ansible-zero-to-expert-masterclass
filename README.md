@@ -70,19 +70,18 @@ Welcome to the **Ansible Zero to Expert Masterclass**! This comprehensive course
 | 07 | [Tags](./chapter-07-tags/) | tags, always, never, --tags, --skip-tags | ✅ Ready |
 | 08 | [Templates](./chapter-08-templates/) | Jinja2 templates, filters, template module | ✅ Ready |
 | 09 | [User & Group Management](./chapter-09-user-group-management/) | user, group, authorized_key | ✅ Ready |
-| 10 | File Management | copy, file, lineinfile, blockinfile | 📝 Coming Soon |
-| 11 | Package Management | apt, yum, package, pip | 📝 Coming Soon |
+| 10 | [Ansible Galaxy](./chapter-10-ansible-galaxy/) | Install roles, collections, requirements.yml | ✅ Ready |
+| 11 | File Management | copy, file, lineinfile, blockinfile | 📝 Coming Soon |
+| 12 | Package Management | apt, yum, package, pip | 📝 Coming Soon |
 
-### 🟠 Advanced (Chapters 12-17)
+### 🟠 Advanced (Chapters 13-18)
 
 | # | Chapter | Description | Status |
 |---|---------|-------------|--------|
-| 12 | Service Management | service, systemd, restarted, enabled | 📝 Coming Soon |
-| 13 | Blocks & Error Handling | block, rescue, always, ignore_errors | 📝 Coming Soon |
+| 13 | Service Management | service, systemd, restarted, enabled | 📝 Coming Soon |
 | 14 | Blocks & Error Handling | block, rescue, always, ignore_errors | 📝 Coming Soon |
 | 15 | Roles | Role structure, defaults, tasks, handlers | 📝 Coming Soon |
-| 16 | Ansible Galaxy | Install roles, collections, requirements.yml | 📝 Coming Soon |
-| 17 | Vault | Encryption, vault password, encrypt_string | 📝 Coming Soon |
+| 16 | Vault | Encryption, vault password, encrypt_string | 📝 Coming Soon |
 
 ### 🔴 Expert (Chapters 18-23)
 
@@ -286,6 +285,18 @@ ansible-zero-to-expert-masterclass/
 │   ├── 02-group-management.yml
 │   ├── 03-authorized-keys.yml
 │   ├── 04-user-group-practical.yml
+│   └── README.md
+│
+├── 📁 chapter-10-ansible-galaxy/       # Ansible Galaxy
+│   ├── ansible.cfg
+│   ├── inventory/
+│   ├── slides/
+│   │   ├── chapter-10-presentation.md
+│   │   └── chapter-10-presentation.pptx
+│   ├── 01-install-role.yml
+│   ├── 02-install-collection.yml
+│   ├── 03-requirements.yml
+│   ├── 04-galaxy-practical.yml
 │   └── README.md
 │
 └── 📁 util/                        # Utilities

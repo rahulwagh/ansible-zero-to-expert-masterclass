@@ -1,0 +1,79 @@
+---
+# ==============================================
+# 01 - Install & Use a Role from Ansible Galaxy
+# ==============================================
+# Before running this playbook, install the role:
+#   ansible-galaxy role install geerlingguy.nginx
+#
+# Verify it was installed:
+#   ansible-galaxy role list
+#
+# Run: ansible-playbook 01-install-role.yml
+
+# ----------------------------------------------
+# Example 1: Use the geerlingguy.nginx role
+#   Installs and starts Nginx via a community role
+# ----------------------------------------------
+#- name: "Example 1: Install Nginx using a Galaxy role"
+#  hosts: webservers
+#  become: true
+#
+#  roles:
+#    - geerlingguy.nginx
+
+# ----------------------------------------------
+# Example 2: Pass variables to override role defaults
+#   ansible-galaxy role install geerlingguy.nginx
+#   Check role defaults: ~/.ansible/roles/geerlingguy.nginx/defaults/main.yml
+# ----------------------------------------------
+#- name: "Example 2: Nginx role with custom variables"
+#  hosts: webservers
+#  become: true
+#
+#  vars:
+#    nginx_listen_port: 8080
+#    nginx_remove_default_vhost: true
+#
+#  roles:
+#    - geerlingguy.nginx
+
+# ----------------------------------------------
+# Example 3: Role with tasks before and after
+#   pre_tasks run before roles, post_tasks run after
+# ----------------------------------------------
+#- name: "Example 3: Pre/post tasks around a role"
+#  hosts: webservers
+#  become: true
+#
+#  pre_tasks:
+#    - name: Ensure system is up to date
+#      apt:
+#        update_cache: true
+#        cache_valid_time: 3600
+#      when: ansible_os_family == "Debian"
+#
+#  roles:
+#    - geerlingguy.nginx
+#
+#  post_tasks:
+#    - name: Verify Nginx is running
+#      service:
+#        name: nginx
+#        state: started
+#      register: nginx_status
+#
+#    - name: Print Nginx status
+#      debug:
+#        msg: "Nginx is {{ 'running' if nginx_status.state == 'started' else 'NOT running' }}"
+
+# ----------------------------------------------
+# Example 4: Install multiple roles and apply them
+#   ansible-galaxy role install geerlingguy.nginx geerlingguy.git
+# ----------------------------------------------
+- name: "Example 4: Apply multiple Galaxy roles"
+  hosts: webservers
+  become: true
+
+  roles:
+    - geerlingguy.git
+    - geerlingguy.nginx

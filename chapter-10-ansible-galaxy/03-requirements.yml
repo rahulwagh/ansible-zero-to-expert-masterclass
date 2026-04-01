@@ -1,0 +1,64 @@
+---
+# ==============================================
+# 03 - requirements.yml
+# ==============================================
+# This file declares ALL roles and collections your project needs.
+# Install everything at once:
+#
+#   ansible-galaxy install -r requirements.yml
+#
+# Install to a specific path (e.g., alongside the playbook):
+#   ansible-galaxy install -r requirements.yml -p ./roles
+#
+# Install collections only:
+#   ansible-galaxy collection install -r requirements.yml
+#
+# Force re-download (overwrite existing):
+#   ansible-galaxy install -r requirements.yml --force
+#
+# ==============================================
+
+# ----------------------------------------------
+# ROLES section
+# Install community / third-party roles from Galaxy
+# ----------------------------------------------
+roles:
+  # Install by role name (latest version)
+  - name: geerlingguy.nginx
+
+  # Install a specific version
+  - name: geerlingguy.git
+    version: "3.0.0"
+
+  # Install from a GitHub repository (not on Galaxy)
+  - name: my_custom_nginx
+    src: https://github.com/geerlingguy/ansible-role-nginx
+    version: master
+
+  # Install from a private Git repo (SSH)
+  # - name: internal_role
+  #   src: git+ssh://git@github.com/myorg/ansible-role-internal.git
+  #   version: v1.2.0
+  #   scm: git
+
+# ----------------------------------------------
+# COLLECTIONS section
+# Install namespaced collections from Galaxy or Automation Hub
+# ----------------------------------------------
+collections:
+  # Install by namespace.collection (latest version)
+  - name: community.general
+
+  # Install a specific version
+  - name: community.mysql
+    version: "3.9.0"
+
+  # Install from Ansible Galaxy (explicit source)
+  - name: ansible.posix
+    source: https://galaxy.ansible.com
+
+  # Install a collection from a Git repo
+  # - name: my_namespace.my_collection
+  #   source: https://github.com/myorg/my-collection.git
+  #   type: git
+  #   version: main

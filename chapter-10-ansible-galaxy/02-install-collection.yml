@@ -1,0 +1,105 @@
+---
+# ==============================================
+# 02 - Install & Use a Collection from Ansible Galaxy
+# ==============================================
+# Before running this playbook, install the collection:
+#   ansible-galaxy collection install community.general
+#   ansible-galaxy collection install community.mysql
+#
+# Verify collections are installed:
+#   ansible-galaxy collection list
+#
+# Run: ansible-playbook 02-install-collection.yml
+
+# ----------------------------------------------
+# Example 1: Use community.general.slack module from a collection
+#   Sends a Slack message — uses FQCN (Fully Qualified Collection Name)
+#   ansible-galaxy collection install community.general
+# ----------------------------------------------
+#- name: "Example 1: Use community.general collection"
+#  hosts: localhost
+#  gather_facts: false
+#
+#  tasks:
+#    - name: Send Slack notification
+#      community.general.slack:
+#        token: "xoxb-YOUR-SLACK-TOKEN"
+#        msg: "Ansible deployment complete!"
+#        channel: "#devops"
+#        color: good
+
+# ----------------------------------------------
+# Example 2: Use community.mysql.mysql_db from a collection
+#   Creates a MySQL database using the mysql collection
+#   ansible-galaxy collection install community.mysql
+# ----------------------------------------------
+#- name: "Example 2: Use community.mysql collection"
+#  hosts: dbservers
+#  become: true
+#
+#  tasks:
+#    - name: Create application database
+#      community.mysql.mysql_db:
+#        name: appdb
+#        state: present
+#        login_unix_socket: /var/run/mysqld/mysqld.sock
+#
+#    - name: Create database user
+#      community.mysql.mysql_user:
+#        name: appuser
+#        password: "SecurePass123!"
+#        priv: "appdb.*:ALL"
+#        state: present
+#        login_unix_socket: /var/run/mysqld/mysqld.sock
+
+# ----------------------------------------------
+# Example 3: Use ansible.posix collection
+#   ansible-galaxy collection install ansible.posix
+#   Provides posix-specific modules like firewalld, sysctl
+# ----------------------------------------------
+#- name: "Example 3: Use ansible.posix collection"
+#  hosts: webservers
+#  become: true
+#
+#  tasks:
+#    - name: Allow HTTP through firewall
+#      ansible.posix.firewalld:
+#        service: http
+#        permanent: true
+#        state: enabled
+#        immediate: true
+#
+#    - name: Set vm.swappiness via sysctl
+#      ansible.posix.sysctl:
+#        name: vm.swappiness
+#        value: "10"
+#        state: present
+#        reload: true
+
+# ----------------------------------------------
+# Example 4: Use FQCN for built-in modules (best practice)
+#   ansible.builtin.* is the FQCN for Ansible core modules
+#   Always use FQCN inside collections to avoid ambiguity
+# ----------------------------------------------
+- name: "Example 4: FQCN for built-in modules"
+  hosts: webservers
+  become: true
+
+  tasks:
+    - name: Install curl using FQCN
+      ansible.builtin.package:
+        name: curl
+        state: present
+
+    - name: Ensure /opt/app directory exists
+      ansible.builtin.file:
+        path: /opt/app
+        state: directory
+        mode: "0755"
+
+    - name: Print collection usage note
+      ansible.builtin.debug:
+        msg: >
+          Using Fully Qualified Collection Names (FQCN) like
+          'ansible.builtin.package' prevents module name conflicts
+          when multiple collections are installed.
