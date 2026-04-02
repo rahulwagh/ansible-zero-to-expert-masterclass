@@ -71,7 +71,8 @@ Welcome to the **Ansible Zero to Expert Masterclass**! This comprehensive course
 | 08 | [Templates](./chapter-08-templates/) | Jinja2 templates, filters, template module | ✅ Ready |
 | 09 | [User & Group Management](./chapter-09-user-group-management/) | user, group, authorized_key | ✅ Ready |
 | 10 | [Ansible Galaxy](./chapter-10-ansible-galaxy/) | Install roles, collections, requirements.yml | ✅ Ready |
-| 11 | File Management | copy, file, lineinfile, blockinfile | 📝 Coming Soon |
+| 11 | [Ansible Vault](./chapter-11-ansible-vault/) | encrypt, decrypt, encrypt_string, vault password file | ✅ Ready |
+| 12 | File Management | copy, file, lineinfile, blockinfile | 📝 Coming Soon |
 | 12 | Package Management | apt, yum, package, pip | 📝 Coming Soon |
 
 ### 🟠 Advanced (Chapters 13-18)
@@ -297,6 +298,21 @@ ansible-zero-to-expert-masterclass/
 │   ├── 02-install-collection.yml
 │   ├── 03-requirements.yml
 │   ├── 04-galaxy-practical.yml
+│   └── README.md
+│
+├── 📁 chapter-11-ansible-vault/        # Ansible Vault
+│   ├── ansible.cfg
+│   ├── inventory/
+│   ├── vars/
+│   │   ├── secret_vars.yml
+│   │   └── app_config.yml
+│   ├── slides/
+│   │   ├── chapter-11-presentation.md
+│   │   └── chapter-11-presentation.pptx
+│   ├── 01-vault-basics.yml
+│   ├── 02-encrypt-string.yml
+│   ├── 03-vault-password-file.yml
+│   ├── 04-vault-practical.yml
 │   └── README.md
 │
 └── 📁 util/                        # Utilities

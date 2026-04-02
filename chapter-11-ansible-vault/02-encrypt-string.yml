@@ -1,0 +1,81 @@
+---
+# ==============================================
+# 02 - ansible-vault encrypt_string
+# ==============================================
+# Encrypts a single string value inline — no separate vars file needed.
+# The encrypted value is embedded directly in the playbook or vars file.
+#
+# Generate an encrypted string:
+#   ansible-vault encrypt_string 'SuperSecret123!' --name 'db_password'
+#
+# Output looks like:
+#   db_password: !vault |
+#             $ANSIBLE_VAULT;1.1;AES256
+#             66386439653236336462626566653337...
+#
+# Copy that block directly into your vars: section.
+#
+# Run:
+#   ansible-playbook 02-encrypt-string.yml --ask-vault-pass
+# ==============================================
+
+# ----------------------------------------------
+# Example 1: Inline encrypted string in vars
+#   Replace the !vault block below with your own encrypt_string output.
+#   ansible-vault encrypt_string 'SuperSecret123!' --name 'db_password'
+# ----------------------------------------------
+- name: "Example 1: Inline encrypt_string value"
+  hosts: webservers
+  become: true
+
+  vars:
+    app_name: "myapp"
+    # Generated with: ansible-vault encrypt_string 'SuperSecret123!' --name 'db_password'
+    # Replace this block with your own encrypt_string output
+    db_password: !vault |
+          $ANSIBLE_VAULT;1.1;AES256
+          66386439653236336462626566653337623962303833613531346234353861376630353765666362
+          3437643831393831383961623934663566366164363430310a343937396261363463626235343339
+          38623937663466366532613935643361616133393733333037343537636463623530623036343330
+          3739313032333730310a663263656633323663613761326565636464646366333732343562346133
+          3663
+
+  tasks:
+    - name: Show db_password is available (length only — never log secrets)
+      ansible.builtin.debug:
+        msg: "db_password is set and has {{ db_password | length }} characters"
+
+    - name: Write config using inline vault string
+      ansible.builtin.copy:
+        dest: /tmp/app-inline.env
+        content: "DB_PASSWORD={{ db_password }}\n"
+        mode: "0600"
+
+# ----------------------------------------------
+# Example 2: Multiple encrypt_string values in a vars file
+#   Keeps the playbook clean — secrets live in a separate vars file
+#   but each value is individually encrypted (not the whole file)
+#
+#   Create vars/inline_secrets.yml and add:
+#     db_password: !vault |
+#           $ANSIBLE_VAULT;1.1;AES256
+#           ...
+#     api_key: !vault |
+#           $ANSIBLE_VAULT;1.1;AES256
+#           ...
+#
+# ansible-vault encrypt_string 'SuperSecret123!' --name 'db_password'
+# ansible-vault encrypt_string 'sk-abc123xyz' --name 'api_key'
+# ----------------------------------------------
+- name: "Example 2: encrypt_string values in a vars file"
+  hosts: webservers
+  become: true
+
+  vars_files:
+    - vars/app_config.yml   # plain config
+    # - vars/inline_secrets.yml  # uncomment after creating the file
+
+  tasks:
+    - name: Show app config is loaded
+      ansible.builtin.debug:
+        msg: "App: {{ app_name }} | Env: {{ app_env }} | DB: {{ db_name }}"

@@ -1,0 +1,104 @@
+---
+# ==============================================
+# 04 - Practical: Deploy App with Vault-Encrypted Secrets
+# ==============================================
+# Real-world scenario: deploy a web application using vault-encrypted
+# database credentials and API keys.
+#
+# Setup steps:
+#   1. Encrypt the secrets file:
+#        ansible-vault encrypt vars/secret_vars.yml
+#
+#   2. Dry-run to verify vault decryption works:
+#        ansible-playbook 04-vault-practical.yml --ask-vault-pass --check
+#
+#   3. Deploy:
+#        ansible-playbook 04-vault-practical.yml --ask-vault-pass
+#
+#   4. Verify:
+#        cat /opt/myapp/.env   (on the server — contains decrypted values)
+# ==============================================
+
+# ----------------------------------------------
+# Play 1: Deploy application with encrypted credentials
+# ----------------------------------------------
+- name: "Play 1: Deploy app with vault-encrypted secrets"
+  hosts: webservers
+  become: true
+
+  vars_files:
+    - vars/app_config.yml   # plain config
+    - vars/secret_vars.yml  # vault-encrypted credentials
+
+  tasks:
+    - name: Create application directory
+      ansible.builtin.file:
+        path: "/opt/{{ app_name }}"
+        state: directory
+        mode: "0750"
+        owner: root
+        group: root
+
+    - name: Deploy .env file with decrypted secrets
+      ansible.builtin.copy:
+        dest: "/opt/{{ app_name }}/.env"
+        content: |
+          # Application Configuration
+          APP_NAME={{ app_name }}
+          APP_ENV={{ app_env }}
+          APP_PORT={{ app_port }}
+
+          # Database
+          DB_HOST={{ db_host }}
+          DB_NAME={{ db_name }}
+          DB_USER={{ db_user }}
+          DB_PASSWORD={{ db_password }}
+
+          # API
+          API_KEY={{ api_key }}
+          SECRET_KEY={{ app_secret_key }}
+        mode: "0600"
+        owner: root
+        group: root
+
+    - name: Verify .env file was created
+      ansible.builtin.stat:
+        path: "/opt/{{ app_name }}/.env"
+      register: env_stat
+
+    - name: Confirm deployment
+      ansible.builtin.debug:
+        msg: "App '{{ app_name }}' deployed. .env exists: {{ env_stat.stat.exists }}"
+
+# ----------------------------------------------
+# Play 2: Rotate secrets — re-encrypt with a new password
+#   After rotating the vault password, re-deploy so the new
+#   encrypted file is used everywhere.
+#
+#   Rotate vault password:
+#     ansible-vault rekey vars/secret_vars.yml
+#     (enter old password, then new password)
+#
+#   Then re-run this playbook with the new password.
+# ----------------------------------------------
+- name: "Play 2: Verify secrets are correctly applied"
+  hosts: webservers
+  become: true
+
+  vars_files:
+    - vars/app_config.yml
+    - vars/secret_vars.yml
+
+  tasks:
+    - name: Read back the deployed .env (stat only — do not print contents)
+      ansible.builtin.stat:
+        path: "/opt/{{ app_name }}/.env"
+      register: env_check
+
+    - name: Confirm file permissions are secure
+      ansible.builtin.assert:
+        that:
+          - env_check.stat.exists
+          - env_check.stat.mode == "0600"
+        success_msg: ".env exists with correct permissions (0600)"
+        fail_msg: ".env is missing or has insecure permissions"

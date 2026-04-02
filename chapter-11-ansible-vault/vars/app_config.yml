@@ -1,0 +1,14 @@
+---
+# ==============================================
+# vars/app_config.yml
+# ==============================================
+# Non-sensitive configuration — no encryption needed.
+# Mix with encrypted vars/secret_vars.yml in playbooks.
+# ==============================================
+
+app_name: "myapp"
+app_port: 8080
+app_env: "production"
+db_name: "appdb"
+db_user: "appuser"
+db_host: "localhost"

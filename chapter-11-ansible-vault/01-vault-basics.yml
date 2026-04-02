@@ -1,0 +1,90 @@
+---
+# ==============================================
+# 01 - Ansible Vault Basics
+# ==============================================
+# Demonstrates encrypting a vars file and using it in a playbook.
+#
+# Setup — encrypt the secrets file first:
+#   ansible-vault encrypt vars/secret_vars.yml
+#   (enter a vault password when prompted)
+#
+# Run:
+#   ansible-playbook 01-vault-basics.yml --ask-vault-pass
+#
+# Or with a password file:
+#   ansible-playbook 01-vault-basics.yml --vault-password-file ~/.vault_pass
+# ==============================================
+
+# ----------------------------------------------
+# Example 1: Load an encrypted vars file
+#   vars_files accepts both plain and vault-encrypted files
+# ----------------------------------------------
+- name: "Example 1: Use vault-encrypted vars file"
+  hosts: webservers
+  become: true
+
+  vars_files:
+    - vars/app_config.yml   # plain — no vault needed
+    - vars/secret_vars.yml  # vault-encrypted
+
+  tasks:
+    - name: Confirm encrypted variable is available at runtime
+      ansible.builtin.debug:
+        msg: "DB user: {{ db_user }} | Password length: {{ db_password | length }} chars"
+
+    - name: Write app config file using vault secrets
+      ansible.builtin.copy:
+        dest: /etc/myapp.env
+        content: |
+          APP_NAME={{ app_name }}
+          APP_ENV={{ app_env }}
+          DB_HOST={{ db_host }}
+          DB_NAME={{ db_name }}
+          DB_USER={{ db_user }}
+          DB_PASSWORD={{ db_password }}
+          API_KEY={{ api_key }}
+        mode: "0600"
+        owner: root
+        group: root
+
+# ----------------------------------------------
+# Example 2: Encrypted vars file + unencrypted vars together
+#   Ansible merges both at runtime — no difference in how you use them
+# ----------------------------------------------
+- name: "Example 2: Mix vault and plain vars"
+  hosts: webservers
+  become: true
+
+  vars:
+    # Plain vars defined inline — no encryption needed
+    deploy_user: "deploy"
+    app_dir: "/opt/myapp"
+
+  vars_files:
+    - vars/secret_vars.yml  # vault-encrypted
+
+  tasks:
+    - name: Create app directory
+      ansible.builtin.file:
+        path: "{{ app_dir }}"
+        state: directory
+        owner: "{{ deploy_user }}"
+        mode: "0755"
+
+    - name: Deploy .env file with secrets
+      ansible.builtin.copy:
+        dest: "{{ app_dir }}/.env"
+        content: |
+          SECRET_KEY={{ app_secret_key }}
+          DB_PASSWORD={{ db_password }}
+        mode: "0600"
+        owner: "{{ deploy_user }}"
+
+    - name: Verify file was created (without leaking the secret)
+      ansible.builtin.stat:
+        path: "{{ app_dir }}/.env"
+      register: env_file
+
+    - name: Confirm .env file exists
+      ansible.builtin.debug:
+        msg: ".env deployed: {{ env_file.stat.exists }}"
