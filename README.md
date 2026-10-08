@@ -19,7 +19,7 @@
 <p align="center">
   <img src="https://img.shields.io/badge/Ansible-2.15+-red?style=for-the-badge&logo=ansible" alt="Ansible"/>
   <img src="https://img.shields.io/badge/Level-Beginner%20to%20Expert-blue?style=for-the-badge" alt="Level"/>
-  <img src="https://img.shields.io/badge/Chapters-23-green?style=for-the-badge" alt="Chapters"/>
+  <img src="https://img.shields.io/badge/Chapters-11-green?style=for-the-badge" alt="Chapters"/>
 </p>
 
 ---
@@ -56,12 +56,12 @@ Welcome to the **Ansible Zero to Expert Masterclass**! This comprehensive course
 
 | # | Chapter | Description | Status |
 |---|---------|-------------|--------|
-| 01 | [Hello Ansible](./chapter-01-hello-ansible/) | Your first playbook, ad-hoc commands, ping, debug | ✅ Ready |
-| 02 | [Inventory Deep Dive](./chapter-02-inventory-deep-dive/) | Static inventory, groups, host patterns | ✅ Ready |
-| 03 | [Variables](./chapter-03-variables/) | vars, vars_files, host_vars, group_vars, facts, magic variables | ✅ Ready |
+| 01 | [Hello Ansible](./chapter-01-hello-ansible/) | Installation, architecture, your first playbook, ping, debug, facts | ✅ Ready |
+| 02 | [Inventory Deep Dive](./chapter-02-inventory-deep-dive/) | Static inventory, groups, host patterns, `--limit` | ✅ Ready |
+| 03 | [Variables](./chapter-03-variables/) | vars, vars_files, host_vars, group_vars, precedence, facts, magic variables | ✅ Ready |
 | 04 | [Conditionals](./chapter-04-conditionals/) | when, failed_when, changed_when, multiple conditions | ✅ Ready |
 
-### 🟡 Intermediate (Chapters 5-11)
+### 🟡 Intermediate (Chapters 5-8)
 
 | # | Chapter | Description | Status |
 |---|---------|-------------|--------|
@@ -69,31 +69,18 @@ Welcome to the **Ansible Zero to Expert Masterclass**! This comprehensive course
 | 06 | [Handlers](./chapter-06-handlers/) | handlers, notify, listen, flush_handlers | ✅ Ready |
 | 07 | [Tags](./chapter-07-tags/) | tags, always, never, --tags, --skip-tags | ✅ Ready |
 | 08 | [Templates](./chapter-08-templates/) | Jinja2 templates, filters, template module | ✅ Ready |
+
+### 🟠 Advanced (Chapters 9-11)
+
+| # | Chapter | Description | Status |
+|---|---------|-------------|--------|
 | 09 | [User & Group Management](./chapter-09-user-group-management/) | user, group, authorized_key | ✅ Ready |
 | 10 | [Ansible Galaxy](./chapter-10-ansible-galaxy/) | Install roles, collections, requirements.yml | ✅ Ready |
-| 11 | [Ansible Vault](./chapter-11-ansible-vault/) | encrypt, decrypt, encrypt_string, vault password file | ✅ Ready |
-| 12 | File Management | copy, file, lineinfile, blockinfile | 📝 Coming Soon |
-| 12 | Package Management | apt, yum, package, pip | 📝 Coming Soon |
+| 11 | [Ansible Vault](./chapter-11-ansible-vault/) | encrypt, decrypt, encrypt_string, vault password file, vault IDs | ✅ Ready |
 
-### 🟠 Advanced (Chapters 13-18)
+### 🔮 Planned Future Chapters
 
-| # | Chapter | Description | Status |
-|---|---------|-------------|--------|
-| 13 | Service Management | service, systemd, restarted, enabled | 📝 Coming Soon |
-| 14 | Blocks & Error Handling | block, rescue, always, ignore_errors | 📝 Coming Soon |
-| 15 | Roles | Role structure, defaults, tasks, handlers | 📝 Coming Soon |
-| 16 | Vault | Encryption, vault password, encrypt_string | 📝 Coming Soon |
-
-### 🔴 Expert (Chapters 18-23)
-
-| # | Chapter | Description | Status |
-|---|---------|-------------|--------|
-| 18 | Dynamic Inventory | Scripts, plugins, cloud providers | 📝 Coming Soon |
-| 19 | Lookups & Filters | lookup plugins, custom filters | 📝 Coming Soon |
-| 20 | Custom Modules | Writing Python modules | 📝 Coming Soon |
-| 21 | Ansible Tower/AWX | Web UI, job templates, credentials | 📝 Coming Soon |
-| 22 | Best Practices | Directory layout, naming, idempotency | 📝 Coming Soon |
-| 23 | Real-World Project | Deploy nginx with SSL, monitoring stack | 📝 Coming Soon |
+File & package management, service management, blocks & error handling, roles, dynamic inventory, lookups & filters, custom modules, AWX / Automation Controller, best practices and a real-world capstone project. These will be added as free updates.
 
 ---
 
@@ -273,8 +260,7 @@ ansible-zero-to-expert-masterclass/
 │   │   └── sudoers_snippet.j2
 │   ├── 01-template-basics.yml
 │   ├── 02-jinja2-filters.yml
-│   ├── 03-template-advanced.yml
-│   ├── 04-templates-practical.yml
+│   ├── 03-templates-practical.yml
 │   └── README.md
 │
 ├── 📁 chapter-09-user-group-management/  # User & Group Management
@@ -350,9 +336,9 @@ Contributions are welcome! Feel free to:
 
 ## 📬 Connect
 
-- 🌐 Website: [yourwebsite.com](https://yourwebsite.com)
-- 📺 YouTube: [Your Channel](https://youtube.com)
-- 💼 LinkedIn: [Your Profile](https://linkedin.com)
+- 🌐 Website: [jhooq.com](https://jhooq.com)
+- 📺 YouTube: [@RahulWagh](https://www.youtube.com/@RahulWagh)
+- 💼 LinkedIn: [rahul-wagh](https://www.linkedin.com/in/rahul-wagh/)
 
 ---
 

@@ -33,12 +33,12 @@
     # Generated with: ansible-vault encrypt_string 'SuperSecret123!' --name 'db_password'
     # Replace this block with your own encrypt_string output
     db_password: !vault |
-          $ANSIBLE_VAULT;1.1;AES256
-          66386439653236336462626566653337623962303833613531346234353861376630353765666362
-          3437643831393831383961623934663566366164363430310a343937396261363463626235343339
-          38623937663466366532613935643361616133393733333037343537636463623530623036343330
-          3739313032333730310a663263656633323663613761326565636464646366333732343562346133
-          3663
+      $ANSIBLE_VAULT;1.1;AES256
+      38333363646366613635616666333665393636643166343361356139383033373737616639373636
+      6137646533633734636130656338656661336330323634310a373236636561323339393762363261
+      31356666636462316132613032376139626537363134646564663336393730333662626665326433
+      6430396635303535340a633437666565636665613337356634663833316234323130343461303035
+      6163
 
   tasks:
     - name: Show db_password is available (length only — never log secrets)
@@ -50,32 +50,3 @@
         dest: /tmp/app-inline.env
         content: "DB_PASSWORD={{ db_password }}\n"
         mode: "0600"
-
-# ----------------------------------------------
-# Example 2: Multiple encrypt_string values in a vars file
-#   Keeps the playbook clean — secrets live in a separate vars file
-#   but each value is individually encrypted (not the whole file)
-#
-#   Create vars/inline_secrets.yml and add:
-#     db_password: !vault |
-#           $ANSIBLE_VAULT;1.1;AES256
-#           ...
-#     api_key: !vault |
-#           $ANSIBLE_VAULT;1.1;AES256
-#           ...
-#
-# ansible-vault encrypt_string 'SuperSecret123!' --name 'db_password'
-# ansible-vault encrypt_string 'sk-abc123xyz' --name 'api_key'
-# ----------------------------------------------
-- name: "Example 2: encrypt_string values in a vars file"
-  hosts: webservers
-  become: true
-
-  vars_files:
-    - vars/app_config.yml   # plain config
-    # - vars/inline_secrets.yml  # uncomment after creating the file
-
-  tasks:
-    - name: Show app config is loaded
-      ansible.builtin.debug:
-        msg: "App: {{ app_name }} | Env: {{ app_env }} | DB: {{ db_name }}"

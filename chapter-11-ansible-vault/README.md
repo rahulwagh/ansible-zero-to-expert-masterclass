@@ -126,7 +126,7 @@ chmod 600 ~/.vault_pass
 ansible-vault rekey vars/secret_vars.yml
 
 # Run without typing the password
-ansible-playbook 03-vault-password-file.yml --vault-password-file ~/.vault_pass
+ansible-playbook 03-vault-password-file.yml --vault-password-file vaul_pass_file/.vault_pass
 
 # Or set vault_password_file in ansible.cfg, then just:
 ansible-playbook 03-vault-password-file.yml

@@ -24,3 +24,10 @@
 credentials.json
 secrets.yml
 vault_password.txt
+
+# Vault password files (chapter 11)
+.vault_pass
+chapter-11-ansible-vault/vaul_pass_file/
+
+# Roles downloaded from Galaxy (chapter 10)
+chapter-10-ansible-galaxy/roles/
