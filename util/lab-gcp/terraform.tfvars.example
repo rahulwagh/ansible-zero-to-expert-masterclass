@@ -1,0 +1,21 @@
+# Copy to terraform.tfvars and edit.
+project_id = "my-gcp-project-id"   # gcloud config get-value project
+
+# e2-micro is free-tier eligible only in us-west1, us-central1, us-east1
+region = "us-central1"
+zone   = "us-central1-a"
+
+instance_count = 3
+machine_type   = "e2-micro"
+
+# Create the key first:  ssh-keygen -t ed25519 -f ~/.ssh/ansible-lab -N ""
+ssh_public_key       = "ssh-ed25519 AAAA...your public key... you@laptop"
+ssh_private_key_file = "~/.ssh/ansible-lab"
+
+# Optional: reuse an existing VPC/subnet instead of creating one
+# create_network = false
+# vpc_name       = "my-existing-vpc"
+# subnet_name    = "my-existing-subnet"
+
+# Optional: lock SSH/HTTP down to your own IP
+# allowed_cidr = "203.0.113.10/32"

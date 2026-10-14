@@ -1,0 +1,11 @@
+# Copy to terraform.tfvars and edit.
+region         = "us-east-1"
+instance_count = 3
+instance_type  = "t3.micro"
+
+# Create the key first:  ssh-keygen -t ed25519 -f ~/.ssh/ansible-lab -N ""
+ssh_public_key       = "ssh-ed25519 AAAA...your public key... you@laptop"
+ssh_private_key_file = "~/.ssh/ansible-lab"
+
+# Optional: lock SSH/HTTP down to your own IP
+# allowed_cidr = "203.0.113.10/32"

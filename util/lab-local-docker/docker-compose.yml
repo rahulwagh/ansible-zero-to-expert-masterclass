@@ -1,0 +1,55 @@
+# Three Ubuntu 22.04 "servers" running locally in Docker.
+#
+#   1. cp .env.example .env           (point SSH_PUBLIC_KEY_FILE at your public key)
+#   2. docker compose up -d --build
+#   3. ansible -i inventory.ini all -m ping
+#
+# SSH ports: 2221 / 2222 / 2223   ->   HTTP ports: 8081 / 8082 / 8083
+
+x-lab-node: &lab-node
+  image: ansible-lab-node:ubuntu-22.04
+  privileged: true          # systemd needs this
+  stop_signal: SIGRTMIN+3   # clean systemd shutdown
+  tmpfs:
+    - /run
+    - /run/lock
+    - /tmp
+  volumes:
+    - /sys/fs/cgroup:/sys/fs/cgroup:rw
+    - ${SSH_PUBLIC_KEY_FILE}:/home/ansible/.ssh/authorized_keys:ro
+  networks:
+    - ansible-lab
+
+services:
+  ansible-lab-server-1:
+    <<: *lab-node
+    build: .
+    container_name: ansible-lab-server-1
+    hostname: ansible-lab-server-1
+    ports:
+      - "2221:22"
+      - "8081:80"
+
+  ansible-lab-server-2:
+    <<: *lab-node
+    container_name: ansible-lab-server-2
+    hostname: ansible-lab-server-2
+    ports:
+      - "2222:22"
+      - "8082:80"
+    depends_on:
+      - ansible-lab-server-1
+
+  ansible-lab-server-3:
+    <<: *lab-node
+    container_name: ansible-lab-server-3
+    hostname: ansible-lab-server-3
+    ports:
+      - "2223:22"
+      - "8083:80"
+    depends_on:
+      - ansible-lab-server-1
+
+networks:
+  ansible-lab:
+    name: ansible-lab

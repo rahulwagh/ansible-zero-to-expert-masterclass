@@ -1,0 +1,18 @@
+#cloud-config
+# Cloud-init for the Multipass lab VMs. create-lab.sh fills in your public key.
+hostname: HOSTNAME_PLACEHOLDER
+manage_etc_hosts: true
+
+users:
+  - name: ansible
+    gecos: Ansible lab user
+    shell: /bin/bash
+    sudo: ALL=(ALL) NOPASSWD:ALL
+    lock_passwd: true
+    ssh_authorized_keys:
+      - SSH_PUBLIC_KEY_PLACEHOLDER
+
+package_update: true
+packages:
+  - python3
+  - python3-apt

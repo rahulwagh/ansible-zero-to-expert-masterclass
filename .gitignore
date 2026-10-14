@@ -31,3 +31,7 @@ chapter-11-ansible-vault/vaul_pass_file/
 
 # Roles downloaded from Galaxy (chapter 10)
 chapter-10-ansible-galaxy/roles/
+
+# Lab environments: personal values never get committed
+util/*/terraform.tfvars
+util/lab-local-docker/.env

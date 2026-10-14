@@ -12,7 +12,7 @@
   <a href="#-course-overview">Overview</a> •
   <a href="#-chapters">Chapters</a> •
   <a href="#-prerequisites">Prerequisites</a> •
-  <a href="#-lab-setup">Lab Setup</a> •
+  <a href="./LAB-SETUP.md">Lab Setup</a> •
   <a href="#-quick-start">Quick Start</a>
 </p>
 
@@ -109,18 +109,25 @@ ssh -V
 
 ## 🖥️ Lab Setup
 
-This course uses **Google Cloud Platform (GCP)** for lab servers. We provide Terraform scripts to provision your lab environment.
+Every chapter runs against **three Ubuntu 22.04 servers**. Run them wherever suits you; the playbooks
+don't care. Full instructions for each option are in **[LAB-SETUP.md](./LAB-SETUP.md)**.
 
-### Quick Lab Setup
+| Option | Cost | Folder |
+|---|---|---|
+| 🐳 Docker on your laptop (fastest, works offline) | Free | [`util/lab-local-docker`](./util/lab-local-docker/) |
+| 💻 Multipass VMs on your laptop | Free | [`util/lab-local-multipass`](./util/lab-local-multipass/) |
+| ☁️ Google Cloud (used in the videos) | Free tier / ~$0.03 per hour | [`util/lab-gcp`](./util/lab-gcp/) |
+| ☁️ AWS | Free tier / ~$0.03 per hour | [`util/lab-aws`](./util/lab-aws/) |
+| ☁️ Azure | Free tier / ~$0.03 per hour | [`util/lab-azure`](./util/lab-azure/) |
+| 🆓 Oracle Always Free, GitHub Codespaces, any VPS | Free | see LAB-SETUP.md |
+
+### Quick start (Docker)
 
 ```bash
-# Navigate to the lab provisioning directory
-cd util/ansible-lab-servers
-
-# Update terraform.tfvars with your GCP project ID
-# Then run:
-terraform init
-terraform apply
+ssh-keygen -t ed25519 -f ~/.ssh/ansible-lab -N ""
+cd util/lab-local-docker && cp .env.example .env && docker compose up -d --build
+cd ../.. && python3 util/set-lab-hosts.py --docker
+cd chapter-01-hello-ansible && ansible-playbook 01-ping-playbook.yml
 ```
 
 ### Lab Architecture
@@ -130,22 +137,23 @@ terraform apply
 │                    Your Local Machine                    │
 │                   (Ansible Control Node)                 │
 └─────────────────────┬───────────────────────────────────┘
-                      │ SSH
+                      │ SSH (user: ansible, key: ~/.ssh/ansible-lab)
                       ▼
 ┌─────────────────────────────────────────────────────────┐
-│                  Google Cloud Platform                   │
+│     Docker / Multipass / GCP / AWS / Azure / any VM      │
 │  ┌─────────────┐ ┌─────────────┐ ┌─────────────┐       │
 │  │  ansible-   │ │  ansible-   │ │  ansible-   │       │
 │  │  lab-server │ │  lab-server │ │  lab-server │       │
 │  │     -1      │ │     -2      │ │     -3      │       │
+│  │ [webservers]│ │ [webservers]│ │ [dbservers] │       │
 │  └─────────────┘ └─────────────┘ └─────────────┘       │
 └─────────────────────────────────────────────────────────┘
 ```
 
-### SSH Connection
+Point every chapter's inventory at your servers in one command:
 
 ```bash
-ssh -i /path/to/private-key ansible@<SERVER_IP>
+python3 util/set-lab-hosts.py --key ~/.ssh/ansible-lab --server1 <ip> --server2 <ip> --server3 <ip>
 ```
 
 ---
@@ -164,8 +172,8 @@ cd ansible-zero-to-expert-masterclass
 ```bash
 cd chapter-01-hello-ansible
 
-# Update inventory with your server IPs
-vim inventory
+# Point the inventory at your lab servers (see LAB-SETUP.md)
+python3 ../util/set-lab-hosts.py --docker      # or --key ... --server1 ... --server2 ... --server3 ...
 
 # Run your first playbook
 ansible-playbook 01-ping-playbook.yml
@@ -301,12 +309,15 @@ ansible-zero-to-expert-masterclass/
 │   ├── 04-vault-practical.yml
 │   └── README.md
 │
-└── 📁 util/                        # Utilities
-    └── ansible-lab-servers/        # Terraform for lab VMs
-        ├── main.tf
-        ├── variables.tf
-        ├── outputs.tf
-        └── terraform.tfvars
+├── 📖 LAB-SETUP.md                 # Where to run the playbooks (local / cloud / free options)
+│
+└── 📁 util/                        # Lab environments
+    ├── set-lab-hosts.py            # Point every chapter at your servers
+    ├── lab-local-docker/           # 3 systemd containers on your laptop (free)
+    ├── lab-local-multipass/        # 3 Ubuntu VMs on your laptop (free)
+    ├── lab-gcp/                    # Terraform: Google Cloud (used in the videos)
+    ├── lab-aws/                    # Terraform: AWS
+    └── lab-azure/                  # Terraform: Azure
 ```
 
 ---
