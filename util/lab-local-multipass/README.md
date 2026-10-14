@@ -6,8 +6,9 @@ limitations at all.
 
 ## Requirements
 
-- Multipass installed: `brew install multipass` (macOS), the installer from multipass.run (Windows),
-  `snap install multipass` (Linux)
+- Multipass **1.14 or newer** (`multipass version`): `brew install multipass` (macOS), the installer
+  from multipass.run (Windows), `snap install multipass` (Linux). Older releases can hang at
+  "Starting" on current macOS versions; upgrade with `brew upgrade multipass` if that happens.
 - ~3 GB RAM free for three small VMs (1 CPU, 1 GB RAM, 5 GB disk each)
 - Ansible on your machine (see `Ansible_Installation.md` in the repo root)
 
@@ -48,4 +49,6 @@ multipass start --all                        # start everything
 ./destroy-lab.sh                             # delete all three VMs
 ```
 
-Tune size with environment variables: `CPUS=2 MEMORY=2G DISK=10G ./create-lab.sh`
+Tune size with environment variables: `CPUS=2 MEMORY=2G DISK=10G ./create-lab.sh`.
+The first launch downloads the Ubuntu image; `LAUNCH_TIMEOUT` (default 900 s) controls how long
+to wait for each VM.
