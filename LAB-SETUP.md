@@ -29,21 +29,22 @@ Follow [`Ansible_Installation.md`](./Ansible_Installation.md) (macOS / Linux) or
 ansible --version
 ```
 
-### 2. Create one SSH key for the lab
-
-```bash
-ssh-keygen -t ed25519 -f ~/.ssh/ansible-lab -N ""
-```
-
-Every option below installs `~/.ssh/ansible-lab.pub` on the servers and Ansible connects with
-`~/.ssh/ansible-lab`. The user on the servers is always `ansible`.
-
-### 3. Clone the repo
+### 2. Clone the repo
 
 ```bash
 git clone https://github.com/rahulwagh/ansible-zero-to-expert-masterclass.git
 cd ansible-zero-to-expert-masterclass
 ```
+
+### 3. Create one SSH key for the lab, inside the repo
+
+```bash
+ssh-keygen -t ed25519 -f util/keys/ansible-lab -N ""
+```
+
+Everything lives in the repo folder: `util/keys/` is gitignored, every option below installs
+`util/keys/ansible-lab.pub` on the servers, and Ansible connects with `util/keys/ansible-lab`.
+The user on the servers is always `ansible`. (The Docker option's `lab.sh up` creates the key for you.)
 
 ---
 
@@ -54,14 +55,12 @@ Full details: [`util/lab-local-docker/README.md`](./util/lab-local-docker/README
 
 ```bash
 cd util/lab-local-docker
-cp .env.example .env               # points at ~/.ssh/ansible-lab.pub
-docker compose up -d --build       # ~2 minutes the first time
-ansible -i inventory.ini all -m ping
-
-cd ../..
-python3 util/set-lab-hosts.py --docker      # points every chapter at the containers
-cd chapter-01-hello-ansible && ansible-playbook 01-ping-playbook.yml
+./lab.sh up                        # key + build + start + wire chapters + ping, ~2 minutes the first time
+cd ../../chapter-01-hello-ansible && ansible-playbook 01-ping-playbook.yml
 ```
+
+Step by step, `lab.sh up` runs: `ssh-keygen` into `util/keys/`, `cp .env.example .env`,
+`docker compose up -d --build`, `python3 util/set-lab-hosts.py --docker`, `ansible all -m ping`.
 
 | Server | SSH | HTTP |
 |---|---|---|
@@ -69,7 +68,7 @@ cd chapter-01-hello-ansible && ansible-playbook 01-ping-playbook.yml
 | ansible-lab-server-2 | 127.0.0.1:2222 | http://localhost:8082 |
 | ansible-lab-server-3 | 127.0.0.1:2223 | http://localhost:8083 |
 
-Stop with `docker compose stop`, reset with `docker compose down`.
+Pause with `./lab.sh stop`, resume with `./lab.sh start`, delete with `./lab.sh down`.
 
 ---
 
@@ -84,8 +83,7 @@ cd util/lab-local-multipass
 chmod +x *.sh && ./create-lab.sh  # launches 3 VMs and prints their IPs
 
 cd ../..
-python3 util/set-lab-hosts.py --key ~/.ssh/ansible-lab \
-    --server1 <ip-1> --server2 <ip-2> --server3 <ip-3>
+python3 util/set-lab-hosts.py --server1 <ip-1> --server2 <ip-2> --server3 <ip-3>
 cd chapter-01-hello-ansible && ansible-playbook 01-ping-playbook.yml
 ```
 
@@ -104,12 +102,11 @@ two cost about $0.01/hour each. New accounts get $300 credit for 90 days.
 ```bash
 gcloud auth application-default login
 cd util/lab-gcp
-cp terraform.tfvars.example terraform.tfvars   # set project_id and paste your public key
+cp terraform.tfvars.example terraform.tfvars   # set project_id; the key is read from util/keys
 terraform init && terraform apply              # prints IPs + an inventory block
 
 cd ../..
-python3 util/set-lab-hosts.py --key ~/.ssh/ansible-lab \
-    --server1 <ip-1> --server2 <ip-2> --server3 <ip-3>
+python3 util/set-lab-hosts.py --server1 <ip-1> --server2 <ip-2> --server3 <ip-3>
 ```
 
 Stop the VMs between sessions (`gcloud compute instances stop ...`) and `terraform destroy` when done.
@@ -127,12 +124,11 @@ credits on newer accounts). Otherwise about $0.03/hour for all three.
 ```bash
 aws configure                     # once
 cd util/lab-aws
-cp terraform.tfvars.example terraform.tfvars   # paste your public key
+cp terraform.tfvars.example terraform.tfvars   # optional edits; the key is read from util/keys
 terraform init && terraform apply
 
 cd ../..
-python3 util/set-lab-hosts.py --key ~/.ssh/ansible-lab \
-    --server1 <ip-1> --server2 <ip-2> --server3 <ip-3>
+python3 util/set-lab-hosts.py --server1 <ip-1> --server2 <ip-2> --server3 <ip-3>
 ```
 
 `terraform destroy` when done.
@@ -150,12 +146,11 @@ Otherwise about $0.03/hour for all three.
 ```bash
 az login                          # once
 cd util/lab-azure
-cp terraform.tfvars.example terraform.tfvars   # set subscription_id, paste your public key
+cp terraform.tfvars.example terraform.tfvars   # set subscription_id; the key is read from util/keys
 terraform init && terraform apply
 
 cd ../..
-python3 util/set-lab-hosts.py --key ~/.ssh/ansible-lab \
-    --server1 <ip-1> --server2 <ip-2> --server3 <ip-3>
+python3 util/set-lab-hosts.py --server1 <ip-1> --server2 <ip-2> --server3 <ip-3>
 ```
 
 `terraform destroy` (or delete the resource group) when done.
@@ -181,8 +176,7 @@ run `set-lab-hosts.py` with its IP. Some free places to get one:
 **Only have one or two machines?** Reuse an IP for two names, the playbooks still work:
 
 ```bash
-python3 util/set-lab-hosts.py --key ~/.ssh/ansible-lab \
-    --server1 10.0.0.5 --server2 10.0.0.5 --server3 10.0.0.6
+python3 util/set-lab-hosts.py --server1 10.0.0.5 --server2 10.0.0.5 --server3 10.0.0.6
 ```
 
 ---
@@ -202,7 +196,7 @@ ansible-lab-server-3 ansible_host=<ip>
 
 [all:vars]
 ansible_user=ansible
-ansible_ssh_private_key_file=~/.ssh/ansible-lab
+ansible_ssh_private_key_file=/full/path/to/repo/util/keys/ansible-lab
 ansible_python_interpreter=/usr/bin/python3
 ```
 
@@ -215,9 +209,10 @@ Run it again whenever your IPs change (cloud VMs get new public IPs after a stop
 
 | Symptom | Fix |
 |---|---|
-| `Permission denied (publickey)` | Wrong key path in the inventory, or the public key is not on the server. Re-run `set-lab-hosts.py --key ...`. |
+| `Permission denied (publickey)` | Wrong key path in the inventory, or the public key is not on the server. Check `util/keys/ansible-lab` exists and re-run `set-lab-hosts.py`. |
 | `UNREACHABLE` on a cloud VM right after `terraform apply` | cloud-init is still installing Python. Wait 1–2 minutes and retry. |
 | `/usr/bin/python3: not found` | Install Python on the server: `sudo apt-get install -y python3`. The Terraform and Docker labs do this for you. |
 | Host key warnings | Every chapter's `ansible.cfg` sets `host_key_checking = False`; run playbooks from inside the chapter folder. |
 | IPs changed after restarting cloud VMs | Re-run `set-lab-hosts.py` with the new IPs. |
-| Docker: `docker compose up` fails on `cgroup` | Update Docker Desktop, or remove/add `cgroup: host` as described in `util/lab-local-docker/README.md`. |
+| Docker: `docker compose up` fails on `cgroup` | Update Docker Desktop, or add `cgroup: host` as described in `util/lab-local-docker/README.md`. |
+| Docker: `Docker is installed but not running` | Start Docker Desktop (wait for the whale icon), then `./lab.sh up` again. |

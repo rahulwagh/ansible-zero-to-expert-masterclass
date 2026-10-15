@@ -15,32 +15,44 @@ Three Ubuntu 22.04 containers that behave like small servers: they run **systemd
   Docker Compose v2 (`docker compose version`)
 - Ansible on your machine (see `Ansible_Installation.md` in the repo root)
 
-## 1. Create an SSH key for the lab
-
-```bash
-ssh-keygen -t ed25519 -f ~/.ssh/ansible-lab -N ""
-```
-
-## 2. Start the lab
+## The short way (one command)
 
 ```bash
 cd util/lab-local-docker
-cp .env.example .env            # points at ~/.ssh/ansible-lab.pub, edit if you used another path
+./lab.sh up        # creates the key, builds + starts the 3 servers, points every chapter at them, pings
+```
+
+`./lab.sh ping`, `./lab.sh stop`, `./lab.sh start`, `./lab.sh down` do what they say.
+
+## The long way (what lab.sh does, step by step)
+
+### 1. Create the SSH key, inside the repo
+
+Everything stays in the repo folder; `util/keys/` is gitignored so the key never gets committed.
+
+```bash
+cd util/lab-local-docker
+ssh-keygen -t ed25519 -f ../keys/ansible-lab -N ""
+```
+
+### 2. Start the lab
+
+```bash
+cp .env.example .env            # points at ../keys/ansible-lab.pub
 docker compose up -d --build    # first run builds the image (~2 min)
 docker compose ps               # all three should be "running"
 ```
 
-## 3. Test from Ansible
+### 3. Test from Ansible
 
 ```bash
 ansible -i inventory.ini all -m ping
 ```
 
-## 4. Point every chapter at the lab
-
-From the repo root:
+### 4. Point every chapter at the lab
 
 ```bash
+cd ../..                        # repo root
 python3 util/set-lab-hosts.py --docker
 cd chapter-01-hello-ansible && ansible-playbook 01-ping-playbook.yml
 ```
@@ -59,5 +71,7 @@ docker compose down          # delete the containers (fresh servers on next "up"
   expose the SSH ports beyond your own machine.
 - On a Linux host that still uses cgroup v1, add `cgroup: host` under `x-lab-node` in
   `docker-compose.yml` if systemd fails to start.
+- `ansible_ssh_private_key_file=../keys/ansible-lab` in `inventory.ini` is relative to this folder, so run
+  `ansible -i inventory.ini ...` from here. The chapter inventories get an absolute path from `set-lab-hosts.py`.
 - Reboot-style tasks (`reboot` module, kernel changes) do not apply to containers. Everything else
   in the course (apt, service, user, template, copy, file, vault, galaxy) works.

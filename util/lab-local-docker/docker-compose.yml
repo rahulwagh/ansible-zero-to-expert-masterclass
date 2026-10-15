@@ -8,6 +8,7 @@
 
 x-lab-node: &lab-node
   image: ansible-lab-node:ubuntu-22.04
+  build: .                  # every service builds the same image locally, nothing is pulled from a registry
   privileged: true          # systemd needs this
   stop_signal: SIGRTMIN+3   # clean systemd shutdown
   tmpfs:
@@ -23,7 +24,6 @@ x-lab-node: &lab-node
 services:
   ansible-lab-server-1:
     <<: *lab-node
-    build: .
     container_name: ansible-lab-server-1
     hostname: ansible-lab-server-1
     ports:

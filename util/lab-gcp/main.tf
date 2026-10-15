@@ -4,6 +4,11 @@
 # By default this creates its own VPC + subnet so it works in any
 # fresh project. Set create_network = false to reuse an existing one.
 
+# Public key: explicit variable, or the repo-local util/keys/ansible-lab.pub
+locals {
+  ssh_public_key = coalesce(var.ssh_public_key, trimspace(file("${path.module}/../keys/ansible-lab.pub")))
+}
+
 # ---------- Network: create ----------
 
 resource "google_compute_network" "vpc" {
@@ -94,7 +99,7 @@ resource "google_compute_instance" "ansible_lab" {
 
   # The "ansible" user + your key
   metadata = {
-    ssh-keys = "${var.ssh_user}:${var.ssh_public_key}"
+    ssh-keys = "${var.ssh_user}:${local.ssh_public_key}"
   }
 
   # Make sure Python exists for Ansible and set the hostname

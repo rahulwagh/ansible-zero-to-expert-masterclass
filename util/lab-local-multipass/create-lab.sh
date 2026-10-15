@@ -1,11 +1,12 @@
 #!/usr/bin/env bash
 # Create three Ubuntu 22.04 lab VMs with Multipass and print an Ansible inventory.
 #
-#   ./create-lab.sh [path-to-public-key]      default: ~/.ssh/ansible-lab.pub
+#   ./create-lab.sh [path-to-public-key]      default: ../keys/ansible-lab.pub (repo-local, gitignored)
 #
 set -euo pipefail
 
-PUB_KEY_FILE="${1:-$HOME/.ssh/ansible-lab.pub}"
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PUB_KEY_FILE="${1:-$SCRIPT_DIR/../keys/ansible-lab.pub}"
 VM_COUNT="${VM_COUNT:-3}"
 CPUS="${CPUS:-1}"
 MEMORY="${MEMORY:-1G}"
@@ -15,12 +16,11 @@ LAUNCH_TIMEOUT="${LAUNCH_TIMEOUT:-900}"   # seconds; first launch downloads the 
 
 if [[ ! -f "$PUB_KEY_FILE" ]]; then
   echo "Public key not found: $PUB_KEY_FILE"
-  echo "Create one with:  ssh-keygen -t ed25519 -f ~/.ssh/ansible-lab -N \"\""
+  echo "Create one with:  ssh-keygen -t ed25519 -f util/keys/ansible-lab -N \"\"   (from the repo root)"
   exit 1
 fi
 PUB_KEY="$(cat "$PUB_KEY_FILE")"
-PRIV_KEY_FILE="${PUB_KEY_FILE%.pub}"
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PRIV_KEY_FILE="$(cd "$(dirname "$PUB_KEY_FILE")" && pwd)/$(basename "${PUB_KEY_FILE%.pub}")"
 
 for i in $(seq 1 "$VM_COUNT"); do
   NAME="ansible-lab-server-$i"

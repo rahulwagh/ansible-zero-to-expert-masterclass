@@ -14,10 +14,10 @@ Run `terraform destroy` when you are done.
 - `gcloud` CLI logged in (`gcloud auth application-default login`)
 - Terraform >= 1.0
 
-## 1. Create an SSH key for the lab
+## 1. Create an SSH key for the lab (inside the repo)
 
 ```bash
-ssh-keygen -t ed25519 -f ~/.ssh/ansible-lab -N ""
+ssh-keygen -t ed25519 -f util/keys/ansible-lab -N ""     # from the repo root; util/keys is gitignored
 ```
 
 ## 2. Provision
@@ -25,7 +25,7 @@ ssh-keygen -t ed25519 -f ~/.ssh/ansible-lab -N ""
 ```bash
 cd util/lab-gcp
 cp terraform.tfvars.example terraform.tfvars
-# edit terraform.tfvars: project_id and paste the contents of ~/.ssh/ansible-lab.pub into ssh_public_key
+# edit terraform.tfvars: set project_id; the key is picked up from util/keys automatically
 terraform init
 terraform apply
 ```
@@ -36,7 +36,7 @@ When it finishes, Terraform prints the external IPs, SSH commands and a ready-ma
 
 ```bash
 cd ../..   # repo root
-python3 util/set-lab-hosts.py --key ~/.ssh/ansible-lab \
+python3 util/set-lab-hosts.py --key util/keys/ansible-lab \
     --server1 <ip-1> --server2 <ip-2> --server3 <ip-3>
 cd chapter-01-hello-ansible && ansible-playbook 01-ping-playbook.yml
 ```

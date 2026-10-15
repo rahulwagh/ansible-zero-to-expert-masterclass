@@ -12,10 +12,10 @@ month for 12 months, or free-tier credits on accounts created after July 2025). 
 - AWS account and the AWS CLI configured (`aws configure`, `aws sts get-caller-identity` works)
 - Terraform >= 1.0
 
-## 1. Create an SSH key for the lab
+## 1. Create an SSH key for the lab (inside the repo)
 
 ```bash
-ssh-keygen -t ed25519 -f ~/.ssh/ansible-lab -N ""
+ssh-keygen -t ed25519 -f util/keys/ansible-lab -N ""     # from the repo root; util/keys is gitignored
 ```
 
 ## 2. Provision
@@ -23,7 +23,7 @@ ssh-keygen -t ed25519 -f ~/.ssh/ansible-lab -N ""
 ```bash
 cd util/lab-aws
 cp terraform.tfvars.example terraform.tfvars
-# edit terraform.tfvars: paste the contents of ~/.ssh/ansible-lab.pub into ssh_public_key
+# edit terraform.tfvars if you want to change region/size; the key is picked up from util/keys automatically
 terraform init
 terraform apply
 ```
@@ -34,7 +34,7 @@ When it finishes, Terraform prints the public IPs, SSH commands and a ready-made
 
 ```bash
 cd ../..   # repo root
-python3 util/set-lab-hosts.py --key ~/.ssh/ansible-lab \
+python3 util/set-lab-hosts.py --key util/keys/ansible-lab \
     --server1 <ip-1> --server2 <ip-2> --server3 <ip-3>
 cd chapter-01-hello-ansible && ansible-playbook 01-ping-playbook.yml
 ```

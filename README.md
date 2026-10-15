@@ -124,10 +124,8 @@ don't care. Full instructions for each option are in **[LAB-SETUP.md](./LAB-SETU
 ### Quick start (Docker)
 
 ```bash
-ssh-keygen -t ed25519 -f ~/.ssh/ansible-lab -N ""
-cd util/lab-local-docker && cp .env.example .env && docker compose up -d --build
-cd ../.. && python3 util/set-lab-hosts.py --docker
-cd chapter-01-hello-ansible && ansible-playbook 01-ping-playbook.yml
+cd util/lab-local-docker && ./lab.sh up        # key + 3 servers + inventories, ~2 min
+cd ../../chapter-01-hello-ansible && ansible-playbook 01-ping-playbook.yml
 ```
 
 ### Lab Architecture
@@ -137,7 +135,7 @@ cd chapter-01-hello-ansible && ansible-playbook 01-ping-playbook.yml
 │                    Your Local Machine                    │
 │                   (Ansible Control Node)                 │
 └─────────────────────┬───────────────────────────────────┘
-                      │ SSH (user: ansible, key: ~/.ssh/ansible-lab)
+                      │ SSH (user: ansible, key: util/keys/ansible-lab)
                       ▼
 ┌─────────────────────────────────────────────────────────┐
 │     Docker / Multipass / GCP / AWS / Azure / any VM      │
@@ -153,7 +151,7 @@ cd chapter-01-hello-ansible && ansible-playbook 01-ping-playbook.yml
 Point every chapter's inventory at your servers in one command:
 
 ```bash
-python3 util/set-lab-hosts.py --key ~/.ssh/ansible-lab --server1 <ip> --server2 <ip> --server3 <ip>
+python3 util/set-lab-hosts.py --server1 <ip> --server2 <ip> --server3 <ip>
 ```
 
 ---
@@ -312,6 +310,7 @@ ansible-zero-to-expert-masterclass/
 ├── 📖 LAB-SETUP.md                 # Where to run the playbooks (local / cloud / free options)
 │
 └── 📁 util/                        # Lab environments
+    ├── keys/                       # Your lab SSH key pair (gitignored)
     ├── set-lab-hosts.py            # Point every chapter at your servers
     ├── lab-local-docker/           # 3 systemd containers on your laptop (free)
     ├── lab-local-multipass/        # 3 Ubuntu VMs on your laptop (free)

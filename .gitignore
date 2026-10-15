@@ -35,3 +35,5 @@ chapter-10-ansible-galaxy/roles/
 # Lab environments: personal values never get committed
 util/*/terraform.tfvars
 util/lab-local-docker/.env
+util/keys/*
+!util/keys/README.md

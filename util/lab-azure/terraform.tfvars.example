@@ -5,9 +5,11 @@ resource_group_name = "ansible-lab-rg"
 instance_count      = 3
 vm_size             = "Standard_B1s"
 
-# Create the key first:  ssh-keygen -t ed25519 -f ~/.ssh/ansible-lab -N ""
-ssh_public_key       = "ssh-ed25519 AAAA...your public key... you@laptop"
-ssh_private_key_file = "~/.ssh/ansible-lab"
+# Key pair lives in util/keys (gitignored). Create it from the repo root with:
+#   ssh-keygen -t ed25519 -f util/keys/ansible-lab -N ""
+# Defaults already point there, so nothing to change unless you keep the key elsewhere:
+# ssh_public_key       = file("../keys/ansible-lab.pub")
+# ssh_private_key_file = "../keys/ansible-lab"
 
 # Optional: lock SSH/HTTP down to your own IP
 # allowed_cidr = "203.0.113.10/32"

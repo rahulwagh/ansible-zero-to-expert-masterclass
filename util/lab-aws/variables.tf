@@ -29,14 +29,15 @@ variable "ssh_user" {
 }
 
 variable "ssh_public_key" {
-  description = "Contents of your SSH public key, e.g. file(\"~/.ssh/ansible-lab.pub\")"
+  description = "Contents of your SSH public key. Defaults to util/keys/ansible-lab.pub"
   type        = string
+  default     = null
 }
 
 variable "ssh_private_key_file" {
   description = "Path to the matching private key (only used in the generated inventory output)"
   type        = string
-  default     = "~/.ssh/ansible-lab"
+  default     = "../keys/ansible-lab"
 }
 
 variable "allowed_cidr" {

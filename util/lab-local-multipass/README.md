@@ -12,10 +12,10 @@ limitations at all.
 - ~3 GB RAM free for three small VMs (1 CPU, 1 GB RAM, 5 GB disk each)
 - Ansible on your machine (see `Ansible_Installation.md` in the repo root)
 
-## 1. Create an SSH key for the lab
+## 1. Create an SSH key for the lab (inside the repo)
 
 ```bash
-ssh-keygen -t ed25519 -f ~/.ssh/ansible-lab -N ""
+ssh-keygen -t ed25519 -f util/keys/ansible-lab -N ""     # from the repo root; util/keys is gitignored
 ```
 
 ## 2. Create the VMs
@@ -23,7 +23,7 @@ ssh-keygen -t ed25519 -f ~/.ssh/ansible-lab -N ""
 ```bash
 cd util/lab-local-multipass
 chmod +x create-lab.sh destroy-lab.sh
-./create-lab.sh                 # uses ~/.ssh/ansible-lab.pub; pass another path as $1 if needed
+./create-lab.sh                 # uses ../keys/ansible-lab.pub; pass another path as $1 if needed
 ```
 
 The script launches `ansible-lab-server-1/2/3`, creates the `ansible` user with your key, and
@@ -35,7 +35,7 @@ Use the three IPs the script printed:
 
 ```bash
 cd ../..   # repo root
-python3 util/set-lab-hosts.py --key ~/.ssh/ansible-lab \
+python3 util/set-lab-hosts.py --key util/keys/ansible-lab \
     --server1 192.168.64.10 --server2 192.168.64.11 --server3 192.168.64.12
 cd chapter-01-hello-ansible && ansible-playbook 01-ping-playbook.yml
 ```

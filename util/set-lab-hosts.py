@@ -4,16 +4,15 @@ Point every chapter's inventory at YOUR lab servers in one go.
 
 Examples
 --------
-  # Cloud VMs (GCP / AWS / Azure / Multipass): three public IPs + your key
-  python3 util/set-lab-hosts.py --key ~/.ssh/ansible-lab \
+  # Cloud VMs (GCP / AWS / Azure / Multipass): three public IPs (key defaults to util/keys/ansible-lab)
+  python3 util/set-lab-hosts.py \
       --server1 34.1.2.3 --server2 34.1.2.4 --server3 34.1.2.5
 
   # Local Docker lab (util/lab-local-docker): all on 127.0.0.1 with mapped ports
   python3 util/set-lab-hosts.py --docker
 
   # Only two machines? Reuse one IP for two names
-  python3 util/set-lab-hosts.py --key ~/.ssh/ansible-lab \
-      --server1 10.0.0.5 --server2 10.0.0.5 --server3 10.0.0.6
+  python3 util/set-lab-hosts.py --server1 10.0.0.5 --server2 10.0.0.5 --server3 10.0.0.6
 
 What it changes in chapter-*/inventory/hosts.ini and chapter-01-hello-ansible/inventory:
   * ansible_host=  for ansible-lab-server-1/2/3 (commented lines stay commented)
@@ -31,21 +30,24 @@ ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 p = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
 p.add_argument("--docker", action="store_true", help="use the local Docker lab (127.0.0.1, ports 2221-2223)")
-p.add_argument("--key", help="path to the private key, e.g. ~/.ssh/ansible-lab")
+p.add_argument("--key", help="path to the private key (default: util/keys/ansible-lab)")
 for n in (1, 2, 3):
     p.add_argument(f"--server{n}", help=f"IP / hostname for ansible-lab-server-{n}")
     p.add_argument(f"--port{n}", type=int, help=f"SSH port for ansible-lab-server-{n} (default 22)")
 args = p.parse_args()
 
+DEFAULT_KEY = os.path.join(ROOT, "util", "keys", "ansible-lab")
 if args.docker:
     hosts = {n: ("127.0.0.1", 2220 + n) for n in (1, 2, 3)}
-    key = args.key or "~/.ssh/ansible-lab"
 else:
     missing = [n for n in (1, 2, 3) if not getattr(args, f"server{n}")]
-    if missing or not args.key:
-        p.error("need --key and --server1/--server2/--server3 (or use --docker)")
+    if missing:
+        p.error("need --server1/--server2/--server3 (or use --docker)")
     hosts = {n: (getattr(args, f"server{n}"), getattr(args, f"port{n}") or 22) for n in (1, 2, 3)}
-    key = args.key
+# absolute path so the inventories work from any directory
+key = os.path.abspath(os.path.expanduser(args.key)) if args.key else DEFAULT_KEY
+if not os.path.isfile(key):
+    print(f"warning: private key not found at {key}\n         create it with: ssh-keygen -t ed25519 -f util/keys/ansible-lab -N ''")
 
 files = sorted(glob.glob(os.path.join(ROOT, "chapter-*", "inventory", "hosts.ini")))
 single = os.path.join(ROOT, "chapter-01-hello-ansible", "inventory")

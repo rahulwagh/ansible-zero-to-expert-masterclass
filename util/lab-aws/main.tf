@@ -2,6 +2,12 @@
 # Ansible lab servers on AWS (default VPC)
 # ============================================
 
+# Public key: explicit variable, or the repo-local util/keys/ansible-lab.pub
+locals {
+  ssh_public_key = coalesce(var.ssh_public_key, trimspace(file("${path.module}/../keys/ansible-lab.pub")))
+}
+
+
 # Use the account's default VPC so no networking has to be built
 data "aws_vpc" "default" {
   default = true
@@ -91,7 +97,7 @@ resource "aws_instance" "ansible_lab" {
         sudo: ALL=(ALL) NOPASSWD:ALL
         lock_passwd: true
         ssh_authorized_keys:
-          - ${var.ssh_public_key}
+          - ${local.ssh_public_key}
     package_update: true
     packages:
       - python3

@@ -4,6 +4,11 @@
 # "terraform destroy" (or deleting the RG) cleans up.
 # ============================================
 
+# Public key: explicit variable, or the repo-local util/keys/ansible-lab.pub
+locals {
+  ssh_public_key = coalesce(var.ssh_public_key, trimspace(file("${path.module}/../keys/ansible-lab.pub")))
+}
+
 resource "azurerm_resource_group" "lab" {
   name     = var.resource_group_name
   location = var.location
@@ -120,7 +125,7 @@ resource "azurerm_linux_virtual_machine" "lab" {
 
   admin_ssh_key {
     username   = var.ssh_user
-    public_key = var.ssh_public_key
+    public_key = local.ssh_public_key
   }
 
   os_disk {
