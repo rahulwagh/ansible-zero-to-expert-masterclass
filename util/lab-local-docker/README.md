@@ -67,10 +67,11 @@ docker compose down          # delete the containers (fresh servers on next "up"
 
 ## Notes
 
-- Containers run `privileged` because systemd needs it. That is normal for this kind of lab; do not
-  expose the SSH ports beyond your own machine.
-- On a Linux host that still uses cgroup v1, add `cgroup: host` under `x-lab-node` in
-  `docker-compose.yml` if systemd fails to start.
+- Containers run `privileged` with the host cgroup namespace (`cgroup: host`) because systemd needs that to
+  supervise forking services such as MySQL in chapter 10. Normal for this kind of lab; do not expose the SSH
+  ports beyond your own machine.
+- `cgroup: host` needs Docker Compose v2.15+. On older versions `lab.sh up` starts the same containers with
+  plain `docker run --cgroupns=host`, so everything still works.
 - `ansible_ssh_private_key_file=../keys/ansible-lab` in `inventory.ini` is relative to this folder, so run
   `ansible -i inventory.ini ...` from here. The chapter inventories get an absolute path from `set-lab-hosts.py`.
 - Reboot-style tasks (`reboot` module, kernel changes) do not apply to containers. Everything else

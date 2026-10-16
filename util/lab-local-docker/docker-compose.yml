@@ -10,6 +10,7 @@ x-lab-node: &lab-node
   image: ansible-lab-node:ubuntu-22.04
   build: .                  # every service builds the same image locally, nothing is pulled from a registry
   privileged: true          # systemd needs this
+  cgroup: host              # systemd needs the host cgroup namespace to supervise forking services (MySQL, PostgreSQL)
   stop_signal: SIGRTMIN+3   # clean systemd shutdown
   tmpfs:
     - /run
