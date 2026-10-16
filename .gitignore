@@ -37,3 +37,6 @@ util/*/terraform.tfvars
 util/lab-local-docker/.env
 util/keys/*
 !util/keys/README.md
+
+# Internal launch notes, not course content
+UDEMY-LAUNCH-PLAN.md
