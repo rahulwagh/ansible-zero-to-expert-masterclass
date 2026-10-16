@@ -1,0 +1,5 @@
+subscription_id     = "00000000-0000-0000-0000-000000000000"   # az account show --query id -o tsv
+location            = "northeurope"
+resource_group_name = "ansible-project-rg"
+# vm_size      = "Standard_B1ms"
+# allowed_cidr = "203.0.113.10/32"

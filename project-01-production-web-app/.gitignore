@@ -1,0 +1,24 @@
+# secrets / per-user
+infra/keys/*
+!infra/keys/README.md
+infra/docker/.env
+infra/*/terraform.tfvars
+.vault_pass
+ansible/inventory/cloud.ini
+
+# terraform
+.terraform/
+*.tfstate
+*.tfstate.backup
+.terraform.lock.hcl
+
+# ansible / python
+*.retry
+__pycache__/
+*.pyc
+.venv/
+
+# os / ide
+.DS_Store
+.idea/
+.vscode/

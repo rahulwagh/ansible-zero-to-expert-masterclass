@@ -1,0 +1,21 @@
+---
+# Hit the load balancer 10 times from the LB host and show which app server answered each time.
+- name: Smoke test through the load balancer
+  hosts: loadbalancers
+  gather_facts: false
+  tasks:
+    - name: 10 requests
+      ansible.builtin.uri:
+        url: "http://127.0.0.1/health"
+        return_content: true
+      register: r
+      loop: "{{ range(10) | list }}"
+      changed_when: false
+
+    - name: Who answered
+      ansible.builtin.debug:
+        msg: "{{ r.results | map(attribute='json') | map(attribute='server') | list }}"
+
+    - name: Versions seen
+      ansible.builtin.debug:
+        msg: "{{ r.results | map(attribute='json') | map(attribute='version') | unique | list }}"

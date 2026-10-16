@@ -1,0 +1,20 @@
+---
+# ── the application ───────────────────────────────────────────────────────────
+app_name: notes-api
+app_user: notes
+app_dir: /opt/notes-api
+app_port: 8000
+app_version: "1.0.0"          # bump this, push, and watch the rolling deploy
+app_workers: 2
+
+# ── database ──────────────────────────────────────────────────────────────────
+postgres_version: 14          # Ubuntu 22.04 ships PostgreSQL 14
+db_name: notes
+db_user: notes
+db_password: "{{ vault_db_password }}"          # from group_vars/all/vault.yml (encrypted)
+db_host: "{{ hostvars[groups['dbservers'][0]]['private_ip'] }}"
+
+# ── load balancer ─────────────────────────────────────────────────────────────
+enable_ssl: false             # true on a cloud server with a real DNS name
+domain_name: ""               # e.g. notes.example.com
+letsencrypt_email: ""         # e.g. you@example.com

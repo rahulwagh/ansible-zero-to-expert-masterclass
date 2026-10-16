@@ -1,0 +1,58 @@
+# Local "cloud": four Ubuntu 22.04 containers with systemd + sshd.
+# Same roles as the real servers: lb-1 (nginx), app-1 + app-2 (the app), db-1 (PostgreSQL).
+#
+#   ./lab.sh up        (uses this file on Compose v2.15+, plain docker run otherwise)
+#   ansible -i ../../ansible/inventory/docker.ini all -m ping
+#
+# Browser: http://localhost:8080  (lb-1:80)   SSH: 2231 lb-1 · 2232 app-1 · 2233 app-2 · 2234 db-1
+
+x-node: &node
+  image: ansible-project-node:ubuntu-22.04
+  build: .
+  privileged: true          # systemd needs this
+  cgroup: host              # systemd must see the host cgroup namespace to supervise forking services (PostgreSQL)
+  stop_signal: SIGRTMIN+3
+  tmpfs:
+    - /run
+    - /run/lock
+    - /tmp
+  volumes:
+    - /sys/fs/cgroup:/sys/fs/cgroup:rw
+    - ${SSH_PUBLIC_KEY_FILE}:/home/ansible/.ssh/authorized_keys:ro
+  networks:
+    - project
+
+services:
+  lb-1:
+    <<: *node
+    container_name: lb-1
+    hostname: lb-1
+    ports:
+      - "2231:22"
+      - "8080:80"
+      - "8443:443"
+
+  app-1:
+    <<: *node
+    container_name: app-1
+    hostname: app-1
+    ports:
+      - "2232:22"
+
+  app-2:
+    <<: *node
+    container_name: app-2
+    hostname: app-2
+    ports:
+      - "2233:22"
+
+  db-1:
+    <<: *node
+    container_name: db-1
+    hostname: db-1
+    ports:
+      - "2234:22"
+
+networks:
+  project:
+    name: ansible-project

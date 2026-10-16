@@ -1,0 +1,65 @@
+---
+- name: Install nginx
+  ansible.builtin.apt:
+    name: nginx
+    state: present
+
+- name: Remove the default site
+  ansible.builtin.file:
+    path: /etc/nginx/sites-enabled/default
+    state: absent
+  notify: Reload nginx
+
+- name: Load balancer config (upstream = every host in [appservers])
+  ansible.builtin.template:
+    src: notes-api.conf.j2
+    dest: /etc/nginx/sites-available/notes-api.conf
+    mode: "0644"
+  notify: Reload nginx
+
+- name: Enable the site
+  ansible.builtin.file:
+    src: /etc/nginx/sites-available/notes-api.conf
+    dest: /etc/nginx/sites-enabled/notes-api.conf
+    state: link
+  notify: Reload nginx
+
+- name: The config must be valid before nginx ever reloads
+  ansible.builtin.command: nginx -t
+  changed_when: false
+
+- name: nginx is running and enabled
+  ansible.builtin.service:
+    name: nginx
+    state: started
+    enabled: true
+
+- name: Apply config now
+  ansible.builtin.meta: flush_handlers
+
+- name: HTTPS with Let's Encrypt (only when enable_ssl is true and a domain is set)
+  when: enable_ssl | bool and domain_name | length > 0
+  block:
+    - name: Install certbot
+      ansible.builtin.apt:
+        name:
+          - certbot
+          - python3-certbot-nginx
+        state: present
+
+    - name: Obtain the certificate and switch the site to HTTPS
+      ansible.builtin.command: >
+        certbot --nginx --non-interactive --agree-tos --redirect
+        -m {{ letsencrypt_email }} -d {{ domain_name }}
+      args:
+        creates: "/etc/letsencrypt/live/{{ domain_name }}/fullchain.pem"
+      notify: Reload nginx
+
+- name: The load balancer answers
+  ansible.builtin.uri:
+    url: "http://127.0.0.1/health"
+    status_code: 200
+  retries: 5
+  delay: 2
+  register: lb_health
+  until: lb_health.status == 200

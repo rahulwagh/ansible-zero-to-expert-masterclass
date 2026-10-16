@@ -1,0 +1,5 @@
+---
+# Copy to vault.yml, change the password, then encrypt it:
+#   cp vault.yml.example vault.yml
+#   ansible-vault encrypt vault.yml
+vault_db_password: "change-me-please"

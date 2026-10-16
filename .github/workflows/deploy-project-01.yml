@@ -1,0 +1,52 @@
+name: Project 01 · deploy with Ansible
+
+# A push to main that touches the app or the playbooks = rolling deploy to the servers.
+on:
+  push:
+    branches: [main]
+    paths:
+      - "project-01-production-web-app/app/**"
+      - "project-01-production-web-app/ansible/**"
+      - ".github/workflows/deploy-project-01.yml"
+  workflow_dispatch:
+
+concurrency: project-01-deploy   # never two deploys at once
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install Ansible + collections
+        run: |
+          pip install --quiet "ansible>=9"
+          ansible-galaxy collection install -r project-01-production-web-app/ansible/requirements.yml -p project-01-production-web-app/ansible/collections
+
+      - name: SSH key, inventory and vault password from repository secrets
+        env:
+          SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}      # contents of infra/keys/lab
+          INVENTORY_INI:   ${{ secrets.INVENTORY_INI }}        # contents of ansible/inventory/cloud.ini
+          VAULT_PASSWORD:  ${{ secrets.VAULT_PASSWORD }}       # the ansible-vault password
+        run: |
+          mkdir -p ~/.ssh
+          printf '%s\n' "$SSH_PRIVATE_KEY" > ~/.ssh/lab && chmod 600 ~/.ssh/lab
+          printf '%s\n' "$INVENTORY_INI" | sed 's#ansible_ssh_private_key_file=.*#ansible_ssh_private_key_file=~/.ssh/lab#' > project-01-production-web-app/ansible/inventory/ci.ini
+          printf '%s\n' "$VAULT_PASSWORD" > project-01-production-web-app/.vault_pass && chmod 600 project-01-production-web-app/.vault_pass   # ansible.cfg points at ../.vault_pass
+
+      - name: Rolling deploy (version = short commit SHA)
+        working-directory: project-01-production-web-app/ansible
+        env:
+          ANSIBLE_HOST_KEY_CHECKING: "False"
+        run: |
+          ansible-playbook -i inventory/ci.ini deploy.yml -e app_version=${GITHUB_SHA::7}
+
+      - name: Smoke test
+        working-directory: project-01-production-web-app/ansible
+        env:
+          ANSIBLE_HOST_KEY_CHECKING: "False"
+        run: ansible-playbook -i inventory/ci.ini smoke-test.yml

@@ -1,0 +1,31 @@
+---
+- name: Update apt cache (max once an hour)
+  ansible.builtin.apt:
+    update_cache: true
+    cache_valid_time: 3600
+
+- name: Base packages every server needs
+  ansible.builtin.apt:
+    name:
+      - python3
+      - python3-apt
+      - curl
+      - ca-certificates
+      - acl            # lets Ansible become an unprivileged user (postgres, notes)
+    state: present
+
+- name: Set the hostname to the inventory name (real VMs only; containers already have it)
+  ansible.builtin.hostname:
+    name: "{{ inventory_hostname }}"
+  when: ansible_virtualization_type | default('') != 'docker'
+
+# On the clouds private_ip is an address, so write /etc/hosts entries and every server can
+# reach the others by name (db-1, app-1 ...). On the Docker lab private_ip IS the container
+# name and Docker's DNS already resolves it, so nothing to do there.
+- name: Make every server resolve the others by inventory name
+  ansible.builtin.lineinfile:
+    path: /etc/hosts
+    regexp: "\\s{{ item }}$"
+    line: "{{ hostvars[item]['private_ip'] }} {{ item }}"
+  loop: "{{ groups['all'] }}"
+  when: hostvars[item]['private_ip'] is match('^\\d+\\.\\d+\\.\\d+\\.\\d+$')

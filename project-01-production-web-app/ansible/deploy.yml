@@ -1,0 +1,27 @@
+---
+# Rolling deploy of a new app version with zero downtime.
+#   ansible-playbook -i inventory/docker.ini deploy.yml --ask-vault-pass -e app_version=1.1.0
+#
+# serial: 1  → one app server at a time
+# the app role refuses to move on until /health on the freshly deployed host says "ok"
+# nginx keeps sending traffic to the other server in the meantime (max_fails / proxy_next_upstream)
+
+- name: Rolling deploy of {{ app_name }}
+  hosts: appservers
+  become: true
+  serial: 1
+  roles:
+    - app
+
+  post_tasks:
+    - name: Through the load balancer, the new version is being served
+      ansible.builtin.uri:
+        url: "http://127.0.0.1/health"
+        return_content: true
+      delegate_to: "{{ groups['loadbalancers'][0] }}"
+      register: via_lb
+      changed_when: false
+
+    - name: Show which server and version the load balancer just returned
+      ansible.builtin.debug:
+        msg: "LB → {{ via_lb.json.server }} running {{ via_lb.json.version }}"

@@ -1,0 +1,16 @@
+# {{ ansible_managed }}
+[Unit]
+Description=Notes API ({{ app_name }}) · deployed by Ansible
+After=network.target
+
+[Service]
+User={{ app_user }}
+Group={{ app_user }}
+WorkingDirectory={{ app_dir }}/app
+EnvironmentFile={{ app_dir }}/.env
+ExecStart={{ app_dir }}/venv/bin/gunicorn --bind 0.0.0.0:{{ app_port }} --workers {{ app_workers }} app:app
+Restart=on-failure
+RestartSec=3
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,28 @@
+---
+# Full stack from zero: run once after the servers exist.
+#   ansible-playbook -i inventory/docker.ini site.yml --ask-vault-pass
+
+- name: Base setup on every server
+  hosts: all
+  become: true
+  roles:
+    - common
+
+- name: Database server
+  hosts: dbservers
+  become: true
+  roles:
+    - postgres
+
+- name: Application servers, one at a time
+  hosts: appservers
+  become: true
+  serial: 1
+  roles:
+    - app
+
+- name: Load balancer
+  hosts: loadbalancers
+  become: true
+  roles:
+    - nginx_lb

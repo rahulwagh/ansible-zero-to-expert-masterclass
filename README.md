@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="https://www.ansible.com/hubfs/Images/Red-Hat-Ansible_OG_1200x630.png" alt="Ansible Logo" width="400"/>
+  <img src="./assets/ansible-logo.png" alt="Ansible Logo" width="160"/>
 </p>
 
 <h1 align="center">Ansible Zero to Expert Masterclass</h1>
@@ -77,6 +77,14 @@ Welcome to the **Ansible Zero to Expert Masterclass**! This comprehensive course
 | 09 | [User & Group Management](./chapter-09-user-group-management/) | user, group, authorized_key | ✅ Ready |
 | 10 | [Ansible Galaxy](./chapter-10-ansible-galaxy/) | Install roles, collections, requirements.yml | ✅ Ready |
 | 11 | [Ansible Vault](./chapter-11-ansible-vault/) | encrypt, decrypt, encrypt_string, vault password file, vault IDs | ✅ Ready |
+
+### 🏗️ Real-World Projects
+
+| # | Project | What you build | Runs on |
+|---|---------|----------------|---------|
+| 01 | [Production Web App: Terraform + Ansible + CI/CD](./project-01-production-web-app/) | nginx load balancer with Let's Encrypt, two app servers (Flask + gunicorn + systemd), PostgreSQL with Vault secrets, zero-downtime rolling deploy, GitHub Actions | Docker on your laptop, GCP, AWS, Azure |
+
+---
 
 ### 🔮 Planned Future Chapters
 
@@ -308,6 +316,8 @@ ansible-zero-to-expert-masterclass/
 │   └── README.md
 │
 ├── 📖 LAB-SETUP.md                 # Where to run the playbooks (local / cloud / free options)
+│
+├── 📁 project-01-production-web-app/   # Real-world project: Terraform + Ansible + CI/CD (Docker / GCP / AWS / Azure)
 │
 └── 📁 util/                        # Lab environments
     ├── keys/                       # Your lab SSH key pair (gitignored)

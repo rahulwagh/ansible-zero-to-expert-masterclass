@@ -1,0 +1,44 @@
+---
+- name: Install PostgreSQL and the Python driver Ansible's modules need
+  ansible.builtin.apt:
+    name:
+      - "postgresql-{{ postgres_version }}"
+      - postgresql-contrib
+      - python3-psycopg2
+    state: present
+
+- name: PostgreSQL is running and enabled
+  ansible.builtin.service:
+    name: postgresql
+    state: started
+    enabled: true
+
+- name: Listen on every interface (the firewall / VPC limits who can reach it)
+  ansible.builtin.lineinfile:
+    path: "/etc/postgresql/{{ postgres_version }}/main/postgresql.conf"
+    regexp: "^#?listen_addresses"
+    line: "listen_addresses = '*'"
+  notify: Restart postgresql
+
+- name: Allow the app servers to connect (any host on the same network, password auth)
+  ansible.builtin.lineinfile:
+    path: "/etc/postgresql/{{ postgres_version }}/main/pg_hba.conf"
+    line: "host    {{ db_name }}    {{ db_user }}    samenet    scram-sha-256"
+    insertafter: EOF
+  notify: Restart postgresql
+
+- name: Apply config changes before creating the database
+  ansible.builtin.meta: flush_handlers
+
+- name: Database user (password comes from Ansible Vault)
+  community.postgresql.postgresql_user:
+    name: "{{ db_user }}"
+    password: "{{ db_password }}"
+  become_user: postgres
+  no_log: true
+
+- name: Database
+  community.postgresql.postgresql_db:
+    name: "{{ db_name }}"
+    owner: "{{ db_user }}"
+  become_user: postgres
