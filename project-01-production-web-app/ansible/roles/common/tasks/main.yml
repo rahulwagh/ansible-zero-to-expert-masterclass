@@ -1,8 +1,9 @@
 ---
-- name: Update apt cache (max once an hour)
+# Always refresh. A freshly built lab image has an empty-but-recent apt list folder, which
+# fools cache_valid_time and makes the next task fail with "No package matching 'acl'".
+- name: Update apt cache
   ansible.builtin.apt:
     update_cache: true
-    cache_valid_time: 3600
 
 - name: Base packages every server needs
   ansible.builtin.apt:

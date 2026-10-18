@@ -13,6 +13,7 @@ ansible/inventory/cloud.ini
 .terraform.lock.hcl
 
 # ansible / python
+ansible/collections/
 *.retry
 __pycache__/
 *.pyc
