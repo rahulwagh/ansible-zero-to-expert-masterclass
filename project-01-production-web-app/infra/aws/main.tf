@@ -80,8 +80,7 @@ resource "aws_instance" "server" {
         lock_passwd: true
         ssh_authorized_keys:
           - ${local.ssh_public_key}
-    package_update: true
-    packages: [python3, python3-apt]
+    # no packages here: Ubuntu already has python3, and a boot-time apt run would race Ansible for the apt lock
   EOF
 
   tags = merge(var.tags, { Name = each.key, group = each.value })

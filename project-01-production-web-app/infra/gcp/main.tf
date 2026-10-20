@@ -68,11 +68,8 @@ resource "google_compute_instance" "server" {
     ssh-keys = "${var.ssh_user}:${local.ssh_public_key}"
   }
 
-  metadata_startup_script = <<-EOF
-    #!/bin/bash
-    apt-get update && apt-get install -y python3 python3-apt
-    hostnamectl set-hostname ${each.key}
-  EOF
+  # No startup script on purpose: Ubuntu's GCE image already has python3, and an apt-get in a
+  # startup script races with Ansible for the apt lock. The common role sets the hostname.
 
   labels                    = { for k, v in var.tags : k => v }
   allow_stopping_for_update = true

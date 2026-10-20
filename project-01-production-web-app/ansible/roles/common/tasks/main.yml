@@ -3,10 +3,12 @@
 # fools cache_valid_time and makes the next task fail with "No package matching 'acl'".
 - name: Update apt cache
   ansible.builtin.apt:
+    lock_timeout: 600
     update_cache: true
 
 - name: Base packages every server needs
   ansible.builtin.apt:
+    lock_timeout: 600
     name:
       - python3
       - python3-apt

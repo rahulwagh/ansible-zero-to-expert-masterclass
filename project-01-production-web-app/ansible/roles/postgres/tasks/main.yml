@@ -1,6 +1,7 @@
 ---
 - name: Install PostgreSQL and the Python driver Ansible's modules need
   ansible.builtin.apt:
+    lock_timeout: 600
     name:
       - "postgresql-{{ postgres_version }}"
       - postgresql-contrib
@@ -20,11 +21,18 @@
     line: "listen_addresses = '*'"
   notify: Restart postgresql
 
-- name: Allow the app servers to connect (any host on the same network, password auth)
+# One pg_hba line per app server, by private IP. ("samenet" is not enough: on GCP every VM's
+# NIC is a /32, so "same network" matches nobody.) On the Docker lab private_ip is the container
+# name, not an address, so there we fall back to samenet, which covers the lab's bridge network.
+- name: Allow each app server to connect (password auth)
   ansible.builtin.lineinfile:
     path: "/etc/postgresql/{{ postgres_version }}/main/pg_hba.conf"
-    line: "host    {{ db_name }}    {{ db_user }}    samenet    scram-sha-256"
+    line: "host    {{ db_name }}    {{ db_user }}    {{ _src }}    scram-sha-256"
     insertafter: EOF
+  vars:
+    _ip: "{{ hostvars[item]['private_ip'] }}"
+    _src: "{{ (_ip is match('^\\d+\\.\\d+\\.\\d+\\.\\d+$')) | ternary(_ip ~ '/32', 'samenet') }}"
+  loop: "{{ groups['appservers'] }}"
   notify: Restart postgresql
 
 - name: Apply config changes before creating the database

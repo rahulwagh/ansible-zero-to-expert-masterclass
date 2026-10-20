@@ -1,6 +1,7 @@
 ---
 - name: Python tooling for the virtualenv
   ansible.builtin.apt:
+    lock_timeout: 600
     name:
       - python3-venv
       - python3-pip

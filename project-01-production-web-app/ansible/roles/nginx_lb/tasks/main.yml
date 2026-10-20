@@ -1,6 +1,7 @@
 ---
 - name: Install nginx
   ansible.builtin.apt:
+    lock_timeout: 600
     name: nginx
     state: present
 
@@ -42,6 +43,7 @@
   block:
     - name: Install certbot
       ansible.builtin.apt:
+        lock_timeout: 600
         name:
           - certbot
           - python3-certbot-nginx

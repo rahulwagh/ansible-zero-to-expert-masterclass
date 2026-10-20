@@ -113,12 +113,8 @@ resource "azurerm_linux_virtual_machine" "vm" {
     version   = "latest"
   }
 
-  custom_data = base64encode(<<-EOF
-    #cloud-config
-    package_update: true
-    packages: [python3, python3-apt]
-  EOF
-  )
+  # No cloud-init packages on purpose: Ubuntu already has python3, and a boot-time apt run would
+  # race Ansible for the apt lock. The admin user and key come from admin_ssh_key above.
 }
 
 locals {
