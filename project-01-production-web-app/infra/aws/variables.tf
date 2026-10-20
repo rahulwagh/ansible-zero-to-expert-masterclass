@@ -36,7 +36,7 @@ variable "ssh_public_key" {
 variable "ssh_private_key_file" {
   description = "Path to the matching private key (only used in the generated inventory output)"
   type        = string
-  default     = "../infra/keys/lab"   # relative to the ansible/ directory, where playbooks run
+  default     = "../infra/keys/lab" # relative to the ansible/ directory, where playbooks run
 }
 
 variable "allowed_cidr" {
