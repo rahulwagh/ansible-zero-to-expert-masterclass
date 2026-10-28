@@ -1,0 +1,63 @@
+---
+# Runs from the rescue block of deploy.yml. Optional: without ANTHROPIC_API_KEY it only prints the evidence.
+- name: "Collect evidence from {{ inventory_hostname }}"
+  ansible.builtin.shell: |
+    echo "--- systemctl status ---"
+    systemctl status {{ app_name }} --no-pager -l 2>&1 | head -12
+    echo "--- last 25 log lines ---"
+    journalctl -u {{ app_name }} -n 25 --no-pager 2>&1 | cut -c1-300
+  register: ai_evidence
+  changed_when: false
+  failed_when: false
+
+- name: What Ansible saw
+  ansible.builtin.debug:
+    msg: "{{ ai_evidence.stdout_lines }}"
+
+- name: "Ask Claude ({{ ai_model }}) for the root cause. The key stays on your laptop."
+  ansible.builtin.uri:
+    url: "{{ ai_url }}"
+    method: POST
+    headers:
+      x-api-key: "{{ anthropic_api_key }}"
+      anthropic-version: "2023-06-01"
+    body_format: json
+    body:
+      model: "{{ ai_model }}"
+      max_tokens: "{{ ai_max_tokens }}"
+      messages:
+        - role: user
+          content: |
+            You are a senior SRE. An Ansible rolling deploy of a Flask app (version {{ app_version }}) failed on host {{ inventory_hostname }}.
+            Failed task: {{ failed_task_name }}
+            Ansible message: {{ failed_task_msg }}
+            Evidence from the server:
+            {{ ai_evidence.stdout }}
+            Answer in at most 5 short lines: 1) root cause, 2) the exact fix, 3) how to verify. No preamble.
+    timeout: 60
+  delegate_to: localhost
+  become: false
+  no_log: true          # the request carries the API key
+  register: ai_reply
+  ignore_errors: true
+  when: anthropic_api_key | length > 0
+
+- name: "Claude's postmortem"
+  ansible.builtin.debug:
+    msg: "{{ ai_reply.json.content[0].text | split('\n') }}"
+  when:
+    - anthropic_api_key | length > 0
+    - ai_reply is succeeded
+    - ai_reply.json is defined
+
+- name: Claude did not answer
+  ansible.builtin.debug:
+    msg: "AI postmortem unavailable (HTTP {{ ai_reply.status | default('no response') }}). The evidence above is still all you need."
+  when:
+    - anthropic_api_key | length > 0
+    - ai_reply is failed
+
+- name: AI postmortem is switched off
+  ansible.builtin.debug:
+    msg: "export ANTHROPIC_API_KEY=... to let Claude explain the failure. Everything else works without it."
+  when: anthropic_api_key | length == 0

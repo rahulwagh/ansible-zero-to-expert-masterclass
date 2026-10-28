@@ -1,0 +1,104 @@
+---
+- name: Python tooling for the virtualenv
+  tags: [app_packages]
+  ansible.builtin.apt:
+    lock_timeout: 600
+    name:
+      - python3-venv
+      - python3-pip
+    state: present
+
+- name: Service user
+  tags: [app_user]
+  ansible.builtin.user:
+    name: "{{ app_user }}"
+    system: true
+    shell: /usr/sbin/nologin
+    home: "{{ app_dir }}"
+    create_home: false
+
+- name: Application directories
+  tags: [app_user]
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: directory
+    owner: "{{ app_user }}"
+    group: "{{ app_user }}"
+    mode: "0755"
+  loop:
+    - "{{ app_dir }}"
+    - "{{ app_dir }}/app"
+
+- name: Ship the application code
+  tags: [app_code]
+  ansible.builtin.copy:
+    src: "{{ playbook_dir }}/../app/"
+    dest: "{{ app_dir }}/app/"
+    owner: "{{ app_user }}"
+    group: "{{ app_user }}"
+    mode: "0644"
+  notify: Restart app
+
+- name: Python dependencies in a virtualenv
+  tags: [app_deps]
+  ansible.builtin.pip:
+    requirements: "{{ app_dir }}/app/requirements.txt"
+    virtualenv: "{{ app_dir }}/venv"
+    virtualenv_command: "python3 -m venv"
+  become_user: "{{ app_user }}"
+  notify: Restart app
+
+- name: Environment file (DATABASE_URL carries the RDS password from SSM, so 0640 and no_log)
+  tags: [app_config]
+  no_log: true
+  ansible.builtin.template:
+    src: env.j2
+    dest: "{{ app_dir }}/.env"
+    owner: "{{ app_user }}"
+    group: "{{ app_user }}"
+    mode: "0640"
+  notify: Restart app
+
+- name: systemd unit
+  tags: [app_service]
+  ansible.builtin.template:
+    src: notes-api.service.j2
+    dest: "/etc/systemd/system/{{ app_name }}.service"
+    mode: "0644"
+  notify:
+    - Reload systemd
+    - Restart app
+
+- name: Service enabled and running
+  tags: [app_service]
+  ansible.builtin.systemd:
+    name: "{{ app_name }}"
+    enabled: true
+    state: started
+    daemon_reload: true
+
+- name: Apply pending restarts now (this is the moment the new version goes live on THIS host)
+  ansible.builtin.meta: flush_handlers
+
+- name: Wait for the app to listen
+  tags: [app_health]
+  ansible.builtin.wait_for:
+    port: "{{ app_port }}"
+    host: 127.0.0.1
+    timeout: "{{ app_start_timeout | default(60) }}"
+
+- name: Health check must pass before Ansible moves to the next app server
+  tags: [app_health]
+  ansible.builtin.uri:
+    url: "http://127.0.0.1:{{ app_port }}/health"
+    status_code: 200
+    return_content: true
+  register: health
+  retries: 10
+  delay: 3
+  until: health.status == 200 and (health.json.status | default('')) == 'ok'
+
+- name: Report
+  tags: [app_health]
+  ansible.builtin.debug:
+    msg: "{{ inventory_hostname }} is healthy on version {{ health.json.version }}"

@@ -1,0 +1,30 @@
+---
+# Both app servers from a bare Ubuntu image to a running app.
+# The database is RDS and the load balancer is an ALB, so there is no postgres or nginx role here.
+- name: Configure the app servers
+  hosts: appservers
+  become: true
+  roles:
+    - { role: common, tags: [common] }
+    - { role: app,    tags: [app] }
+
+  post_tasks:
+    - name: Wait until the load balancer reports the app healthy
+      tags: [verify]
+      ansible.builtin.uri:
+        url: "http://{{ alb_dns }}/health"
+        return_content: true
+      delegate_to: localhost
+      become: false
+      run_once: true
+      register: via_alb
+      retries: 30
+      delay: 5
+      until: via_alb.status == 200
+      changed_when: false
+
+    - name: Show who answered
+      tags: [verify]
+      ansible.builtin.debug:
+        msg: "ALB → {{ via_alb.json.server }} running {{ via_alb.json.version }} · db {{ via_alb.json.db }}"
+      run_once: true

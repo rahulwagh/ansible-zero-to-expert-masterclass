@@ -1,0 +1,6 @@
+region        = "us-east-1"
+instance_type = "t3.small"
+# Strongly recommended: only you can SSH in
+# allowed_cidr = "203.0.113.10/32"
+# vpc_name = "ansible-p02-vpc"
+# vpc_cidr = "10.20.0.0/16"

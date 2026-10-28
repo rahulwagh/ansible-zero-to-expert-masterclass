@@ -1,0 +1,15 @@
+---
+- name: Reload systemd
+  ansible.builtin.systemd:
+    daemon_reload: true
+
+# A step-by-step run (--tags app_code, app_config ...) notifies this handler before the systemd unit exists.
+# "Not installed yet" is not a failure then; any other error still fails.
+- name: Restart app
+  ansible.builtin.systemd:
+    name: "{{ app_name }}"
+    state: restarted
+  register: app_restart
+  failed_when:
+    - app_restart.failed | default(false)
+    - "'Could not find the requested service' not in (app_restart.msg | default(''))"

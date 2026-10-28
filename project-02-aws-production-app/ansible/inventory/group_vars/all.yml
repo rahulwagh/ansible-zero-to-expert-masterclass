@@ -1,0 +1,19 @@
+---
+aws_region: us-east-1
+ssm_prefix: /ansible-project-02
+
+app_name: notes-api
+app_user: notes
+app_dir: /opt/notes-api
+app_port: 8000
+app_version: "1.0.0"
+app_workers: 2
+
+db_name: notes
+db_user: notes
+
+# Terraform published these to Parameter Store. Nothing is copied by hand and nothing secret is in git.
+db_host:          "{{ lookup('amazon.aws.ssm_parameter', ssm_prefix ~ '/db_host', region=aws_region) }}"
+db_password:      "{{ lookup('amazon.aws.ssm_parameter', ssm_prefix ~ '/db_password', region=aws_region) }}"
+target_group_arn: "{{ lookup('amazon.aws.ssm_parameter', ssm_prefix ~ '/target_group_arn', region=aws_region) }}"
+alb_dns:          "{{ lookup('amazon.aws.ssm_parameter', ssm_prefix ~ '/alb_dns', region=aws_region) }}"

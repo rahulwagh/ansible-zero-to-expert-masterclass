@@ -1,0 +1,72 @@
+---
+# Rolling deploy behind the AWS load balancer.
+#   ansible-playbook deploy.yml -e app_version=1.1.0
+#
+# For each app server, one at a time (serial: 1):
+#   1. drain   take it out of the ALB target group and wait until it is "unused"
+#   2. deploy  the app role (copy, restart, local /health must pass)
+#   3. return  put it back and wait until the ALB itself calls it "healthy"
+# If anything in steps 1-3 fails, the rescue block asks Claude for a postmortem and stops the rollout.
+# The broken server was already drained, and the others are untouched, so users never see the bad version.
+- name: Rolling deploy behind the ALB
+  hosts: appservers
+  become: true
+  serial: 1
+  max_fail_percentage: 0
+
+  tasks:
+    - name: "Deploy {{ app_version }} to {{ inventory_hostname }}"
+      block:
+        - name: "Drain {{ inventory_hostname }} from the load balancer"
+          community.aws.elb_target:
+            target_group_arn: "{{ target_group_arn }}"
+            target_id: "{{ instance_id }}"
+            target_port: "{{ app_port }}"
+            region: "{{ aws_region }}"
+            state: absent
+            target_status: unused
+            target_status_timeout: 90
+          delegate_to: localhost
+          become: false
+
+        - name: "Install the new version on {{ inventory_hostname }}"
+          ansible.builtin.include_role:
+            name: app
+
+        - name: "Put {{ inventory_hostname }} back, wait until the ALB says healthy"
+          community.aws.elb_target:
+            target_group_arn: "{{ target_group_arn }}"
+            target_id: "{{ instance_id }}"
+            target_port: "{{ app_port }}"
+            region: "{{ aws_region }}"
+            state: present
+            target_status: healthy
+            target_status_timeout: 120
+          delegate_to: localhost
+          become: false
+
+      rescue:
+        - name: "Ask Claude what went wrong on {{ inventory_hostname }}"
+          ansible.builtin.include_role:
+            name: ai_postmortem
+          vars:
+            failed_task_name: "{{ ansible_failed_task.name | default('unknown') }}"
+            failed_task_msg: "{{ ansible_failed_result.msg | default('') }}"
+
+        - name: Stop the rollout (the other server keeps serving the old version)
+          ansible.builtin.fail:
+            msg: "Deploy of {{ app_version }} failed on {{ inventory_hostname }}. It stays out of the load balancer. The other servers were not touched."
+
+  post_tasks:
+    - name: "Through the ALB: who answers now?"
+      ansible.builtin.uri:
+        url: "http://{{ alb_dns }}/health"
+        return_content: true
+      delegate_to: localhost
+      become: false
+      register: via_alb
+      changed_when: false
+
+    - name: Show which server and version the ALB returned
+      ansible.builtin.debug:
+        msg: "ALB → {{ via_alb.json.server }} running {{ via_alb.json.version }}"

@@ -1,0 +1,15 @@
+---
+# No hosts listed here. Ansible asks AWS "which EC2 instances belong to this project?"
+# every time it runs, so the inventory can never go stale.
+plugin: amazon.aws.aws_ec2
+regions:
+  - us-east-1
+filters:
+  tag:Project: ansible-project-02
+  instance-state-name: running
+hostnames:
+  - tag:Name                       # app-1, app-2
+compose:
+  ansible_host: public_ip_address  # how Ansible reaches the machine
+groups:
+  appservers: "tags['Role'] == 'app'"

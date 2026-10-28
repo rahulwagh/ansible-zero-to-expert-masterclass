@@ -1,0 +1,48 @@
+---
+# Ask the ALB ten times who answers, then write and read one note through it.
+- name: Smoke test through the ALB
+  hosts: appservers
+  gather_facts: false
+  run_once: true
+  connection: local
+
+  tasks:
+    - name: Ten requests through the load balancer
+      ansible.builtin.uri:
+        url: "http://{{ alb_dns }}/health"
+        return_content: true
+      loop: "{{ range(10) | list }}"
+      register: answers
+      changed_when: false
+
+    - name: Who answered
+      ansible.builtin.debug:
+        msg:
+          servers: "{{ answers.results | map(attribute='json.server') | unique | sort }}"
+          versions: "{{ answers.results | map(attribute='json.version') | unique | sort }}"
+          database: "{{ answers.results | map(attribute='json.db') | unique | sort }}"
+
+    - name: Every app server answered at least once
+      ansible.builtin.assert:
+        that: (answers.results | map(attribute='json.server') | unique | list | length) == (groups['appservers'] | length)
+        success_msg: "All {{ groups['appservers'] | length }} app servers are in rotation"
+
+    - name: Write a note through the ALB into RDS
+      ansible.builtin.uri:
+        url: "http://{{ alb_dns }}/api/notes"
+        method: POST
+        body_format: json
+        body: { text: "smoke test" }
+        status_code: [200, 201]
+      changed_when: false
+
+    - name: Read the notes back
+      ansible.builtin.uri:
+        url: "http://{{ alb_dns }}/api/notes"
+        return_content: true
+      register: notes
+      changed_when: false
+
+    - name: Notes stored in RDS
+      ansible.builtin.debug:
+        msg: "{{ notes.json | length }} note(s) in the database"

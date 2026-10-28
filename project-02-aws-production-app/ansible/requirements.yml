@@ -1,0 +1,5 @@
+---
+# Both ship with the `ansible` pip package; this installs them if you only have ansible-core.
+collections:
+  - name: amazon.aws        # aws_ec2 dynamic inventory + the ssm_parameter lookup
+  - name: community.aws     # elb_target: drain / register an instance in a load balancer target group
