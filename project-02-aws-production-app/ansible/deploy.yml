@@ -12,6 +12,7 @@
   hosts: appservers
   become: true
   serial: 1
+  order: sorted          # app-1 first, then app-2, whatever order AWS returns them in
   max_fail_percentage: 0
 
   tasks:
