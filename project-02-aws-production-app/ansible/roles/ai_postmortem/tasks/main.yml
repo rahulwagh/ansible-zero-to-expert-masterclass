@@ -6,6 +6,8 @@
     systemctl status {{ app_name }} --no-pager -l 2>&1 | head -12
     echo "--- last 25 log lines ---"
     journalctl -u {{ app_name }} -n 25 --no-pager 2>&1 | cut -c1-300
+    echo "--- what /health answers on this server ---"
+    curl -s -m 5 http://127.0.0.1:{{ app_port | default(8000) }}/health || echo "(nothing answers on port {{ app_port | default(8000) }})"
   register: ai_evidence
   changed_when: false
   failed_when: false
@@ -25,6 +27,8 @@
     body:
       model: "{{ ai_model }}"
       max_tokens: "{{ ai_max_tokens }}"
+      output_config:
+        effort: "{{ ai_effort }}"
       messages:
         - role: user
           content: |
@@ -42,9 +46,10 @@
   ignore_errors: true
   when: anthropic_api_key | length > 0
 
+# The reply can start with a (hidden) thinking block, so pick the text blocks instead of content[0].
 - name: "Claude's postmortem"
   ansible.builtin.debug:
-    msg: "{{ ai_reply.json.content[0].text | split('\n') }}"
+    msg: "{{ ai_reply.json.content | selectattr('type', 'equalto', 'text') | map(attribute='text') | join('\n') | split('\n') }}"
   when:
     - anthropic_api_key | length > 0
     - ai_reply is succeeded
@@ -52,7 +57,7 @@
 
 - name: Claude did not answer
   ansible.builtin.debug:
-    msg: "AI postmortem unavailable (HTTP {{ ai_reply.status | default('no response') }}). The evidence above is still all you need."
+    msg: "AI postmortem unavailable (HTTP {{ ai_reply.status | default('no response') }}{{ ': ' ~ ai_reply.json.error.message if ai_reply.json.error.message is defined else '' }}). The evidence above is still all you need."
   when:
     - anthropic_api_key | length > 0
     - ai_reply is failed
